@@ -1,0 +1,48 @@
+// --- admin.js ---
+// Lógica para manejar el panel de administración
+
+const socket = io();
+
+// Elementos HTML
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const simulateBtn = document.getElementById('simulateBtn');
+const durationInput = document.getElementById('duration');
+const delayInput = document.getElementById('delay');
+const themeSelect = document.getElementById('theme');
+
+// Iniciar subasta
+startBtn.addEventListener('click', () => {
+  const duration = parseInt(durationInput.value) || 60;
+  const delay = parseInt(delayInput.value) || 10;
+  socket.emit('admin:start', { duration, delay });
+  alert(`Subasta iniciada por ${duration} segundos + ${delay} de delay.`);
+});
+
+// Detener subasta
+stopBtn.addEventListener('click', () => {
+  socket.emit('admin:stop');
+  alert('Subasta detenida manualmente.');
+});
+
+// Simular donación
+simulateBtn.addEventListener('click', () => {
+  socket.emit('admin:simulate');
+  alert('Simulación de donación enviada.');
+});
+
+// Cambiar tema
+themeSelect.addEventListener('change', () => {
+  const theme = themeSelect.value;
+  socket.emit('admin:theme', theme);
+  alert(`Tema cambiado a: ${theme}`);
+});
+
+// Confirmar conexión
+socket.on('connect', () => {
+  console.log('Conectado al servidor admin.js ✅');
+});
+
+socket.on('disconnect', () => {
+  console.log('Desconectado del servidor ❌');
+});
