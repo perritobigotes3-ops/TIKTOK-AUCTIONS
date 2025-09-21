@@ -1,1 +1,95 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Diagnóstico Overlay</title>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .ok { color: #00ff88; }
+    .fail { color: #ff4444; }
+    pre {
+      background: #111;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Diagnóstico de TikTok Overlay</h1>
+  <p>Resultados de pruebas:</p>
+  <ul>
+    <li id="htmlCheck">HTML: ⏳</li>
+    <li id="socketCheck">Socket.IO: ⏳</li>
+    <li id="jsCheck">overlay.js: ⏳</li>
+    <li id="serverEvents">Eventos servidor: ⏳</li>
+  </ul>
+
+  <h2>📜 Log en tiempo real</h2>
+  <pre id="log"></pre>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const log = msg => {
+      document.getElementById("log").innerText += msg + "\n";
+    };
+
+    // 1. Confirmar carga de HTML
+    document.getElementById("htmlCheck").innerHTML = 'HTML: <span class="ok">OK</span>';
+    log("HTML cargado correctamente ✅");
+
+    // 2. Confirmar carga de overlay.js
+    fetch('/js/overlay.js')
+      .then(res => {
+        if (res.ok) {
+          document.getElementById("jsCheck").innerHTML = 'overlay.js: <span class="ok">OK</span>';
+          log("overlay.js cargado correctamente ✅");
+        } else {
+          document.getElementById("jsCheck").innerHTML = 'overlay.js: <span class="fail">NO encontrado</span>';
+          log("❌ overlay.js no se encuentra en /js/overlay.js");
+        }
+      })
+      .catch(() => {
+        document.getElementById("jsCheck").innerHTML = 'overlay.js: <span class="fail">Error</span>';
+        log("❌ Error al intentar cargar overlay.js");
+      });
+
+    // 3. Confirmar Socket.IO
+    try {
+      const socket = io();
+      socket.on('connect', () => {
+        document.getElementById("socketCheck").innerHTML = 'Socket.IO: <span class="ok">Conectado</span>';
+        log("Conexión WebSocket establecida ✅");
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById("socketCheck").innerHTML = 'Socket.IO: <span class="fail">Desconectado</span>';
+        log("❌ Socket.IO desconectado");
+      });
+
+      // Probar recepción de eventos
+      socket.on('state', (data) => {
+        document.getElementById("serverEvents").innerHTML = 'Eventos servidor: <span class="ok">Recibiendo</span>';
+        log("Evento 'state' recibido desde servidor:");
+        log(JSON.stringify(data, null, 2));
+      });
+
+      setTimeout(() => {
+        if (document.getElementById("serverEvents").innerText.includes("⏳")) {
+          document.getElementById("serverEvents").innerHTML = 'Eventos servidor: <span class="fail">No recibidos</span>';
+          log("❌ No se están recibiendo eventos del servidor.");
+        }
+      }, 5000);
+    } catch (e) {
+      document.getElementById("socketCheck").innerHTML = 'Socket.IO: <span class="fail">Error</span>';
+      log("❌ Error al inicializar Socket.IO: " + e.message);
+    }
+  </script>
+</body>
+</html>
