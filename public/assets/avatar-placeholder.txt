@@ -1,0 +1,1 @@
+Replace with a PNG avatar placeholder at public/assets/avatar-placeholder.png

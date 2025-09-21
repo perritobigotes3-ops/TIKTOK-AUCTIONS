@@ -1,0 +1,1 @@
+Add your confetti GIFs and sounds here: public/assets/
