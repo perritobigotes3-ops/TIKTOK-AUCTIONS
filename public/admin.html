@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin - Subastas 14alls (mykestrades)</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#0b0b0b;color:#fff;padding:12px}
+    .card{background:#0f1720;padding:12px;border-radius:8px;max-width:900px;margin:0 auto}
+    input,button{padding:8px;margin:6px;border-radius:6px;border:0}
+    button{cursor:pointer;background:#ff5c7c;color:#fff}
+    .secondary{background:#1f2937}
+    .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .list{margin-top:10px;background:#081018;padding:8px;border-radius:6px;max-height:300px;overflow:auto}
+    label{font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Panel Admin — Subasta</h2>
+    <div class="row">
+      <label>Duración (segundos)</label>
+      <input id="duration" type="number" value="60" min="5" />
+      <button id="start">▶️ Iniciar</button>
+      <button id="pause">⏸ Pausar</button>
+      <button id="resetTimer">🔄 Reset Timer</button>
+      <button id="resetAll" class="secondary">♻️ Reset Todo</button>
+      <button id="end" class="secondary">⏹ Finalizar</button>
+    </div>
+
+    <div class="row">
+      <label>Simular donación</label>
+      <input id="donor" placeholder="usuario" />
+      <input id="coins" type="number" placeholder="monedas" value="50" />
+      <button id="donate">➕ Donar</button>
+    </div>
+
+    <h3>Estado</h3>
+    <div id="state" style="font-size:14px"></div>
+
+    <h3>Participantes (acumulado)</h3>
+    <div id="participants" class="list"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const resetTimerBtn = document.getElementById('resetTimer');
+    const resetAllBtn = document.getElementById('resetAll');
+    const endBtn = document.getElementById('end');
+    const donateBtn = document.getElementById('donate');
+
+    startBtn.onclick = ()=> { const d = Number(document.getElementById('duration').value)||60; socket.emit('admin:start', d); };
+    pauseBtn.onclick = ()=> socket.emit('admin:pause');
+    resetTimerBtn.onclick = ()=> socket.emit('admin:resetTimer');
+    resetAllBtn.onclick = ()=> socket.emit('admin:resetAll');
+    endBtn.onclick = ()=> socket.emit('admin:end');
+    donateBtn.onclick = ()=> {
+      const u = document.getElementById('donor').value.trim();
+      const c = Number(document.getElementById('coins').value) || 0;
+      if(!u || c<=0) return alert('Usuario y monedas válidas');
+      socket.emit('admin:donation', { username: u, coins: c });
+      document.getElementById('donor').value='';
+    };
+
+    socket.on('state', (s)=>{
+      const st = document.getElementById('state');
+      st.innerHTML = `<b>Timer:</b> ${s.timer.remaining}s <b>Running:</b> ${s.timer.running}`;
+      const part = document.getElementById('participants');
+      const entries = Object.entries(s.participants).sort((a,b)=>b[1]-a[1]);
+      part.innerHTML = entries.map(e=>`<div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid rgba(255,255,255,0.03)"><div>${e[0]}</div><div>${e[1]} 💎</div></div>`).join('');
+    });
+
+    socket.on('donationLive', (d)=>{
+      // small visual feedback in admin
+      console.log('donation live', d);
+    });
+
+    socket.on('auctionEnd', (data)=>{
+      alert('GANADOR: ' + (data.winner||'Nadie') + ' con ' + (data.coins||0) + ' monedas');
+    });
+
+    // request initial state
+    socket.emit('reqState');
+  </script>
+</body>
+</html>
