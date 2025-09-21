@@ -3,94 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Overlay - Subasta TikTok</title>
+  <title>Overlay Subasta Pro</title>
   <link rel="stylesheet" href="/css/style-gamer.css" id="theme-style">
   <style>
-    /* Estilo base mínimo */
     body {
       margin: 0;
       padding: 0;
-      background: #0a0a0a;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: transparent;
       overflow: hidden;
+      color: #fff;
     }
+
+    #overlay-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ===== Contador ===== */
+    #auction-timer {
+      margin-top: 20px;
+      font-size: 80px;
+      font-weight: 900;
+      text-shadow: 0 0 20px #00e1ff, 0 0 40px #00bcd4;
+    }
+
+    #auction-timer.blink {
+      animation: blink 0.8s infinite;
+    }
+
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.3; }
+    }
+
+    /* ===== Ranking ===== */
     #ranking {
-      position: absolute;
-      top: 10%;
-      left: 5%;
       width: 90%;
-      max-width: 300px;
+      max-width: 600px;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
     }
+
+    .ranking-title {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 0 0 10px #00e1ff;
+    }
+
     .participant {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      font-size: 16px;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-      transition: transform 0.3s ease;
+      justify-content: space-between;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      transition: transform 0.3s;
     }
-    .participant:hover {
-      transform: scale(1.05);
+
+    .participant .left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
+
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       overflow: hidden;
-      margin-right: 10px;
+      border: 3px solid #fff;
     }
+
     .avatar img {
       width: 100%;
       height: 100%;
-    }
-    .name {
-      flex-grow: 1;
-      text-align: left;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    .medal {
-      width: 28px;
-      text-align: right;
-      font-size: 18px;
+      object-fit: cover;
     }
 
-    /* VS animado */
+    .name {
+      font-size: 20px;
+      font-weight: bold;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .coins {
+      font-size: 20px;
+      font-weight: bold;
+      color: gold;
+    }
+
+    .medal {
+      font-size: 26px;
+    }
+
+    /* ===== VS ===== */
     #vs-container {
-      position: absolute;
-      bottom: 15%;
-      left: 50%;
-      transform: translateX(-50%);
+      width: 90%;
+      max-width: 700px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .vs-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.6);
+      box-shadow: 0 0 30px rgba(255,87,34,0.7);
+    }
+
+    .vs-side {
+      flex: 1;
       text-align: center;
     }
-    #vs-fire {
-      font-size: 60px;
-      color: #ff4500;
-      text-shadow: 0 0 20px #ff0000, 0 0 40px #ff6600;
-      animation: flame 1s infinite alternate;
+
+    .vs-name {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
     }
+
+    .vs-coins {
+      font-size: 22px;
+      color: #ffd66b;
+      margin-top: 8px;
+    }
+
+    .flame {
+      font-size: 38px;
+      animation: flame 1s infinite alternate;
+      color: orangered;
+      text-shadow: 0 0 20px #ff6600;
+    }
+
     @keyframes flame {
-      0% { transform: scale(1) rotate(0deg); }
-      100% { transform: scale(1.2) rotate(-5deg); }
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.2); opacity: 0.7; }
+    }
+
+    /* ===== Pantalla ganador ===== */
+    #winnerScreen {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+    }
+
+    #winnerTitle {
+      font-size: 46px;
+      font-weight: 900;
+      text-shadow: 0 0 15px #fff, 0 0 40px #ff0, 0 0 60px #f90;
+      margin-bottom: 20px;
+    }
+
+    #winnerAvatar {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      margin: 20px auto;
+      border: 8px solid gold;
+      box-shadow: 0 0 50px rgba(255,215,0,0.9);
+      overflow: hidden;
+    }
+
+    #winnerCoins {
+      font-size: 32px;
+      color: gold;
+      animation: sparkle 1.5s infinite;
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
   </style>
 </head>
 <body>
-  <!-- Ranking -->
-  <div id="ranking"></div>
+  <div id="overlay-container">
+    <div id="auction-timer">00:00</div>
+    <div id="ranking">
+      <div class="ranking-title">🏆 Top Donadores</div>
+    </div>
 
-  <!-- VS entre Top 1 y Top 2 -->
-  <div id="vs-container">
-    <div id="vs-fire">🔥 VS 🔥</div>
+    <div id="vs-container">
+      <div class="vs-box">
+        <div class="vs-side">
+          <div id="vs-left" class="vs-name">—</div>
+          <div id="vs-left-coins" class="vs-coins">0 💰</div>
+        </div>
+        <div class="flame">🔥 VS 🔥</div>
+        <div class="vs-side">
+          <div id="vs-right" class="vs-name">—</div>
+          <div id="vs-right-coins" class="vs-coins">0 💰</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="winnerScreen">
+      <div id="winnerTitle">🎉 ¡Felicidades!</div>
+      <div id="winnerAvatar"><img src="/assets/avatar-placeholder.png" style="width:100%;height:100%;object-fit:cover"></div>
+      <div id="winnerCoins">Donó 0 💰</div>
+    </div>
   </div>
 
-  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/overlay.js"></script>
 </body>
-</html><!-- Overlay HTML -->
+</html>
