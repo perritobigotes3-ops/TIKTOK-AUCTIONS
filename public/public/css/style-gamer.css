@@ -1,4 +1,0 @@
-:root{--accent:#ff5c7c;--accent2:#7c4dff;--text:#fff}
-body{font-family:Inter,Arial,Helvetica,sans-serif;color:var(--text);background:transparent}
-.card{background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));border-radius:12px}
-.avatar img{border-radius:50%;display:block}
