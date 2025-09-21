@@ -17,7 +17,8 @@ let state = {
 let interval = null;
 let delayInterval = null;
 
-app.use(express.static('public'));
+const path = require('path');
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
   res.send('Servidor Subasta Overlay activo 🚀');
