@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Overlay Subasta Gamer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/css/style-gamer.css" id="theme-link">
+  <style>
+    /* small overrides */
+    body{background:transparent}
+    .wrap{width:900px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:6px}
+    #winnerBox{display:none;position:relative;z-index:50}
+    .podium{display:flex;gap:12px;align-items:end;justify-content:center;margin-top:8px}
+    .card{width:240px;padding:12px;border-radius:12px;backdrop-filter: blur(6px);display:flex;gap:12px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    .avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid rgba(255,255,255,0.06);flex-shrink:0}
+    .name{font-weight:700;color:#fff}
+    .coins{font-weight:800;color:#ffd966}
+    #timer{font-size:96px;font-weight:900;color:var(--accent);text-shadow:0 6px 24px rgba(0,0,0,0.6)}
+    /* animations */
+    .flash { animation: flash 1s ease; }
+    @keyframes flash { 0%{transform:scale(0.95);opacity:0}60%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1} }
+    /* winner show */
+    .confetti { position:fixed; left:0; right:0; top:0; bottom:0; pointer-events:none; z-index:40 }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="timer">00:00</div>
+    <div id="alertBanner" style="display:none;padding:8px;border-radius:8px;background:rgba(255,0,0,0.12);color:#fff;font-weight:800">🚨 Última oportunidad - DONA AHORA 🚨</div>
+    <div class="podium" id="podium"></div>
+    <div id="winnerBox"></div>
+    <div id="confettiContainer"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const timerEl = document.getElementById('timer');
+    const podium = document.getElementById('podium');
+    const alertBanner = document.getElementById('alertBanner');
+    const winnerBox = document.getElementById('winnerBox');
+    const confettiContainer = document.getElementById('confettiContainer');
+    const themeLink = document.getElementById('theme-link');
+
+    function formatTime(sec){ const m = String(Math.floor(sec/60)).padStart(2,'0'); const s = String(sec%60).padStart(2,'0'); return m+':'+s; }
+
+    socket.on('state', (s)=>{
+      timerEl.textContent = formatTime(s.timer.remaining || s.timer.duration);
+      if(s.timer.inDelay) {
+        alertBanner.style.display = 'block';
+      } else alertBanner.style.display = 'none';
+      // top3
+      const arr = Object.entries(s.participants||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
+      podium.innerHTML = arr.map((e,i)=>{
+        const rank = i+1;
+        const size = (i===0?80:(i===1?70:64));
+        const avatar = (s.recentDonations.find(d=>d.username===e[0])||{}).avatar || '/assets/avatar-placeholder.png';
+        return `<div class="card flash" style="width:${220 - i*20}px;background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));border:2px solid rgba(255,255,255,0.02)"><div class="avatar"><img src="${avatar}" style="width:100%;height:100%;object-fit:cover" /></div><div><div class="name">${e[0]}</div><div class="coins">${e[1]} 💎</div></div></div>`;
+      }).join('') || '<div style="color:rgba(255,255,255,0.5)">Aún no hay donaciones</div>';
+    });
+
+    socket.on('donationLive', (d)=>{
+      // small pulse on podium when donation happens
+      podium.classList.add('flash');
+      setTimeout(()=>podium.classList.remove('flash'),800);
+    });
+
+    socket.on('enterDelay', (data)=>{
+      alertBanner.style.display = 'block';
+    });
+
+    socket.on('auctionEnd', (data)=>{
+      // show winner with animation and confetti
+      winnerBox.innerHTML = `<div style="font-size:48px;font-weight:900;color:var(--accent)">🏆 GANADOR: ${data.winner} — ${data.coins} 💎</div>`;
+      winnerBox.style.display='block';
+      // confetti GIF (use CSS/JS confetti)
+      runConfetti();
+    });
+
+    function runConfetti(){
+      // simple confetti: create colored circles
+      for(let i=0;i<80;i++){
+        const el = document.createElement('div');
+        el.style.position='absolute';
+        el.style.left = Math.random()*100 + '%';
+        el.style.top = Math.random()*-20 + 'px';
+        el.style.width = Math.random()*10+6 + 'px';
+        el.style.height = el.style.width;
+        el.style.borderRadius='50%';
+        const cols = ['#ff4d4d','#ffd966','#4d94ff','#33cc33','#ff66ff','#00e6e6'];
+        el.style.background = cols[Math.floor(Math.random()*cols.length)];
+        el.style.opacity = 0.95;
+        el.style.transform = 'translateY(0)';
+        el.style.transition = 'transform 2s linear, opacity 2s linear';
+        confettiContainer.appendChild(el);
+        setTimeout(()=>{ el.style.transform = 'translateY(110vh)'; el.style.opacity=0; }, 50 + Math.random()*200);
+        setTimeout(()=>{ confettiContainer.removeChild(el); }, 2200);
+      }
+    }
+
+    // request initial state
+    socket.emit('reqState');
+  </script>
+</body>
+</html>
