@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Overlay Subasta TikTok</title>
+  <style>
+    body { background: transparent; color: white; font-family: Arial, sans-serif; text-align: center; }
+    #timer { font-size: 3em; margin-top: 20px; }
+    #leaderboard { margin-top: 30px; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <h1>Subasta en vivo</h1>
+  <div id="timer">00:00</div>
+  <h2>Donadores</h2>
+  <ul id="leaderboard"></ul>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const timerDiv = document.getElementById("timer");
+    const leaderboardUl = document.getElementById("leaderboard");
+
+    socket.on('auctionUpdate', (auction) => {
+      if (auction.remaining) {
+        const minutes = String(Math.floor(auction.remaining / 60)).padStart(2,'0');
+        const seconds = String(auction.remaining % 60).padStart(2,'0');
+        timerDiv.textContent = minutes + ":" + seconds;
+      }
+      leaderboardUl.innerHTML = "";
+      const sorted = Object.entries(auction.leaderboard).sort((a,b)=>b[1]-a[1]);
+      sorted.forEach(([user, points]) => {
+        const li = document.createElement("li");
+        li.textContent = user + ": " + points + " pts";
+        leaderboardUl.appendChild(li);
+      });
+    });
+
+    socket.on('auctionEnded', (leaderboard) => {
+      timerDiv.textContent = "FINALIZADO";
+    });
+  </script>
+</body>
+</html>
