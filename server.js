@@ -3,14 +3,15 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Servir archivos directamente desde la raíz del proyecto
+// Servir archivos desde la raíz
 app.use(express.static(__dirname));
 
-// Rutas básicas
+// Ruta principal → admin
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
+// Ruta overlay
 app.get('/overlay', (req, res) => {
   res.sendFile(path.join(__dirname, 'overlay.html'));
 });
