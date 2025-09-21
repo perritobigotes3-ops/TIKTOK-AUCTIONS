@@ -21,8 +21,7 @@ let auction = {
 };
 
 // Static files
-app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(express.static(__dirname));
 // WebSocket
 io.on('connection', (socket) => {
   console.log('Cliente conectado');
