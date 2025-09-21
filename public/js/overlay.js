@@ -99,9 +99,10 @@ function showWinner(username, coins, avatarUrl) {
   winnerAvatar.src = avatarUrl || '/assets/avatar-placeholder.png';
   winnerScreen.style.display = 'flex';
 
+  // Ahora dura 8 segundos en pantalla
   setTimeout(() => {
     winnerScreen.style.display = 'none';
-  }, 5000);
+  }, 8000);
 }
 
 // === Eventos Socket.IO ===
