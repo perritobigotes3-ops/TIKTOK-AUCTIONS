@@ -1,73 +1,80 @@
-const socket = io();
+const socket = io(); // Conectar con el servidor
 
-// ===== Elementos HTML =====
+// ===== Diagnóstico de conexión =====
+socket.on('connect', () => console.log('Admin conectado ✅'));
+socket.on('disconnect', () => console.log('Admin desconectado ❌'));
+
+// ===== Elementos del panel =====
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const simulateBtn = document.getElementById('simulateBtn');
+
 const durationInput = document.getElementById('duration');
 const delayInput = document.getElementById('delay');
 const themeSelect = document.getElementById('theme');
+
 const simNameInput = document.getElementById('simName');
 const simCoinsInput = document.getElementById('simCoins');
+
 const historyEl = document.getElementById('history');
 
-// ===== Eventos =====
+// ===== Botones principales =====
+
+// Iniciar subasta
 startBtn.addEventListener('click', () => {
   const duration = parseInt(durationInput.value) || 60;
   const delay = parseInt(delayInput.value) || 10;
+
   socket.emit('admin:start', { duration, delay });
-  alert(`Subasta iniciada por ${duration}s + ${delay}s de delay.`);
+  alert(`🚀 Subasta iniciada por ${duration}s + ${delay}s de delay.`);
 });
 
+// Detener subasta
 stopBtn.addEventListener('click', () => {
   socket.emit('admin:stop');
-  alert('Subasta detenida manualmente.');
+  alert('🛑 Subasta detenida manualmente.');
 });
 
+// Reiniciar subasta
 resetBtn.addEventListener('click', () => {
   socket.emit('admin:reset');
-  alert('Subasta reiniciada.');
+  alert('🔄 Subasta reiniciada y ranking limpio.');
+  historyEl.innerHTML = ''; // Limpia historial visual
 });
 
+// ===== Simulación de donación =====
 simulateBtn.addEventListener('click', () => {
-  const username = simNameInput.value.trim() || 'Invitado';
+  const username = simNameInput.value.trim();
   const coins = parseInt(simCoinsInput.value) || 10;
+
+  if (!username) {
+    alert('Debes ingresar un nombre de usuario para simular.');
+    return;
+  }
+
   socket.emit('admin:simulate', { username, coins });
-  alert(`Simulación: ${username} donó ${coins} monedas.`);
+  alert(`💸 Simulación enviada: ${username} donó ${coins} monedas.`);
 });
 
+// ===== Cambiar tema del overlay =====
 themeSelect.addEventListener('change', () => {
   const theme = themeSelect.value;
   socket.emit('admin:theme', theme);
-  alert(`Tema cambiado a: ${theme}`);
+  alert(`🎨 Tema cambiado a: ${theme}`);
 });
 
-// ===== Historial =====
-function renderHistory(history) {
-  historyEl.innerHTML = '';
-  history.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'history-item';
-    const top3 = item.top3.map(t => `${t[0]} (${t[1]}💰)`).join(', ');
-    div.innerHTML = `
-      <strong>${item.date}</strong><br>
-      🏆 Ganador: ${item.winner} — ${item.coins} 💰<br>
-      Top 3: ${top3}
-    `;
-    historyEl.appendChild(div);
-  });
-}
+// ===== Historial de subastas =====
+socket.on('auctionEnd', (state) => {
+  const sorted = Object.entries(state.participants || {}).sort((a, b) => b[1] - a[1]);
+  if (sorted.length === 0) return;
 
-socket.on('history', (history) => {
-  renderHistory(history);
-});
+  const [winner, coins] = sorted[0];
+  const time = new Date().toLocaleTimeString();
 
-socket.on('connect', () => {
-  console.log('Admin conectado ✅');
-  socket.emit('admin:getHistory');
-});
+  const div = document.createElement('div');
+  div.className = 'history-item';
+  div.textContent = `${time} - Ganador: ${winner} (${coins} 💰)`;
 
-socket.on('disconnect', () => {
-  console.log('Admin desconectado ❌');
+  historyEl.prepend(div);
 });
