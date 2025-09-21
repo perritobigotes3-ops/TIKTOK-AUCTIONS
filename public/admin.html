@@ -1,39 +1,100 @@
-const socket = io();
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Subastas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #00e1ff;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: #111;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 225, 255, 0.4);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #ccc;
+      text-align: left;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      background: #00e1ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00bcd4;
+    }
+    .simulate {
+      background: #ffcc00;
+    }
+    .stop {
+      background: #ff4444;
+      color: #fff;
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Panel de Administración</h1>
+  <div class="container">
+    <label for="duration">⏳ Duración de la subasta (segundos)</label>
+    <input type="number" id="duration" placeholder="Ej: 60" value="60">
 
-// Elementos HTML
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const simulateBtn = document.getElementById('simulateBtn');
-const durationInput = document.getElementById('duration');
-const delayInput = document.getElementById('delay');
-const themeSelect = document.getElementById('theme');
+    <label for="delay">⏱️ Tiempo de Delay (segundos)</label>
+    <input type="number" id="delay" placeholder="Ej: 10" value="10">
 
-// Iniciar subasta
-startBtn.addEventListener('click', () => {
-  const duration = parseInt(durationInput.value) || 60;
-  const delay = parseInt(delayInput.value) || 10;
-  socket.emit('admin:start', { duration, delay });
-  alert(`Subasta iniciada por ${duration} segundos + ${delay} de delay.`);
-});
+    <label for="theme">🎨 Tema del Overlay</label>
+    <select id="theme">
+      <option value="gamer">Gamer</option>
+      <option value="femenino">Femenino</option>
+    </select>
 
-// Detener subasta
-stopBtn.addEventListener('click', () => {
-  socket.emit('admin:stop');
-  alert('Subasta detenida manualmente.');
-});
+    <button id="startBtn">🚀 Iniciar Subasta</button>
+    <button id="stopBtn" class="stop">🛑 Detener Subasta</button>
+    <button id="simulateBtn" class="simulate">🎭 Simular Donación</button>
+  </div>
 
-// Simular donación
-simulateBtn.addEventListener('click', () => {
-  socket.emit('admin:simulate');
-  alert('Simulación de donación enviada.');
-});
+  <footer>
+    TikTok Auctions Overlay © 2025
+  </footer>
 
-// Cambiar tema
-themeSelect.addEventListener('change', () => {
-  const theme = themeSelect.value;
-  socket.emit('admin:theme', theme);
-  alert(`Tema cambiado a: ${theme}`);
-});
-
-socket.on('connect', () => console.log('Admin conectado ✅'));
-socket.on('disconnect', () => console.log('Admin desconectado ❌'));<!-- Admin Panel HTML -->
+  <!-- Scripts correctos -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
