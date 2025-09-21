@@ -1,109 +1,139 @@
-//const socket = io();
+const express = require('express');
+const path = require('path');
+const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const axios = require('axios');
 
-const timerEl = document.getElementById('auction-timer');
-const rankingEl = document.getElementById('ranking');
-const vsLeft = document.getElementById('vs-left');
-const vsRight = document.getElementById('vs-right');
-const vsLeftCoins = document.getElementById('vs-left-coins');
-const vsRightCoins = document.getElementById('vs-right-coins');
+const PORT = process.env.PORT || 3000;
 
-const winnerScreen = document.getElementById('winnerScreen');
-const winnerTitle = document.getElementById('winnerTitle');
-const winnerCoins = document.getElementById('winnerCoins');
-const winnerAvatar = document.querySelector('#winnerAvatar img');
+// Estado inicial
+let state = {
+  participants: {}, 
+  recentDonations: [],
+  timer: { remaining: 60, delay: 10, inDelay: false },
+  theme: 'gamer'
+};
 
-function formatTime(sec) {
-  const m = Math.floor(sec / 60).toString().padStart(2, '0');
-  const s = (sec % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-}
+let interval = null;
+let delayInterval = null;
 
-function findAvatar(username, recent) {
-  if (!recent) return '/assets/avatar-placeholder.png';
-  const found = recent.find(d => d.username === username);
-  return found?.avatar || '/assets/avatar-placeholder.png';
-}
+// Servir carpeta "public" correctamente
+app.use(express.static(path.join(__dirname, 'public')));
 
-function renderTimer(state) {
-  const timer = state.timer?.remaining ?? 0;
-  if (timer <= 10 && !state.timer.inDelay) {
-    timerEl.classList.add('blink');
-  } else {
-    timerEl.classList.remove('blink');
+// Ruta base
+app.get('/', (req, res) => {
+  res.send('Servidor Subasta Overlay activo 🚀');
+});
+
+// Obtener avatar de TikTok
+async function getTikTokAvatar(username) {
+  try {
+    const url = `https://www.tiktok.com/@${username}`;
+    const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const match = data.match(/"avatarLarger":"(.*?)"/);
+    return match ? match[1].replace(/\u0026/g, '&') : '/assets/avatar-placeholder.png';
+  } catch {
+    return '/assets/avatar-placeholder.png';
   }
-  timerEl.textContent = state.timer.inDelay
-    ? `Delay: ${state.timer.delayRemaining}`
-    : formatTime(timer);
 }
 
-function renderRanking(participants, recentDonations) {
-  rankingEl.innerHTML = '<div class="ranking-title">🏆 Top Donadores</div>';
-  const sorted = Object.entries(participants || {}).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  const medals = ['🥇','🥈','🥉'];
+// Iniciar subasta
+function startAuction(duration, delay) {
+  clearInterval(interval);
+  clearInterval(delayInterval);
 
-  sorted.forEach(([username, coins], idx) => {
-    const avatar = findAvatar(username, recentDonations);
-    const div = document.createElement('div');
-    div.className = 'participant';
-    div.innerHTML = `
-      <div class="left">
-        <div class="avatar"><img src="${avatar}" alt="${username}"></div>
-        <div class="name">${username}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:15px">
-        <div class="coins">${coins} 💰</div>
-        <div class="medal">${medals[idx]}</div>
-      </div>`;
-    rankingEl.appendChild(div);
+  state.timer.remaining = duration;
+  state.timer.delay = delay;
+  state.participants = {};
+  state.recentDonations = [];
+  state.timer.inDelay = false;
+
+  io.emit('state', state);
+
+  interval = setInterval(() => {
+    state.timer.remaining--;
+
+    if (state.timer.remaining <= 0) {
+      clearInterval(interval);
+      startDelay();
+    }
+
+    io.emit('state', state);
+  }, 1000);
+
+  console.log(`⏳ Subasta iniciada: ${duration}s + ${delay}s de delay`);
+}
+
+// Delay antes de mostrar ganador
+function startDelay() {
+  state.timer.inDelay = true;
+  let delayRemaining = state.timer.delay;
+
+  io.emit('enterDelay');
+
+  delayInterval = setInterval(() => {
+    delayRemaining--;
+
+    if (delayRemaining <= 0) {
+      clearInterval(delayInterval);
+      state.timer.inDelay = false;
+      io.emit('delayEnd');
+      endAuction();
+    }
+
+    io.emit('state', { ...state, timer: { ...state.timer, delayRemaining } });
+  }, 1000);
+}
+
+// Finalizar subasta
+function endAuction() {
+  io.emit('auctionEnd', state);
+  console.log('🏆 Subasta finalizada. Ganador enviado al overlay.');
+}
+
+// Simulación de donación
+function simulateDonation(username, coins) {
+  console.log(`💰 Simulación recibida: ${username} donó ${coins} monedas`);
+  
+  getTikTokAvatar(username).then(avatar => {
+    if (!state.participants[username]) state.participants[username] = 0;
+    state.participants[username] += coins;
+
+    state.recentDonations.push({ username, coins, avatar });
+    if (state.recentDonations.length > 10) state.recentDonations.shift();
+
+    io.emit('state', state);
   });
 }
 
-function renderVS(participants) {
-  const sorted = Object.entries(participants || {}).sort((a,b)=>b[1]-a[1]).slice(0,2);
-  if (sorted[0]) {
-    vsLeft.textContent = sorted[0][0];
-    vsLeftCoins.textContent = `${sorted[0][1]} 💰`;
-  } else {
-    vsLeft.textContent = '—';
-    vsLeftCoins.textContent = `0 💰`;
-  }
+// Manejo de conexiones socket.io
+io.on('connection', (socket) => {
+  console.log('Cliente conectado ✅');
+  socket.emit('state', state);
 
-  if (sorted[1]) {
-    vsRight.textContent = sorted[1][0];
-    vsRightCoins.textContent = `${sorted[1][1]} 💰`;
-  } else {
-    vsRight.textContent = '—';
-    vsRightCoins.textContent = `0 💰`;
-  }
-}
+  socket.on('admin:start', ({ duration, delay }) => {
+    console.log("📢 Iniciando subasta con duración:", duration, "delay:", delay);
+    startAuction(duration, delay);
+  });
 
-function showWinner(username, coins, avatarUrl) {
-  winnerTitle.textContent = `🎉 ¡Felicidades ${username}! 🎉`;
-  winnerCoins.textContent = `Donó ${coins} 💰`;
-  winnerAvatar.src = avatarUrl || '/assets/avatar-placeholder.png';
-  winnerScreen.style.display = 'flex';
+  socket.on('admin:stop', () => {
+    console.log("🛑 Subasta detenida manualmente");
+    clearInterval(interval);
+    clearInterval(delayInterval);
+    endAuction();
+  });
 
-  setTimeout(() => {
-    winnerScreen.style.display = 'none';
-  }, 5000);
-}
+  socket.on('admin:simulate', ({ username, coins }) => {
+    simulateDonation(username, coins);
+  });
 
-socket.on('state', (state) => {
-  renderTimer(state);
-  renderRanking(state.participants, state.recentDonations);
-  renderVS(state.participants);
+  socket.on('admin:theme', (theme) => {
+    state.theme = theme;
+    io.emit('themeChange', theme);
+  });
 });
 
-socket.on('auctionEnd', (state) => {
-  const sorted = Object.entries(state.participants || {}).sort((a,b)=>b[1]-a[1]);
-  if (sorted.length === 0) return;
-  const [username, coins] = sorted[0];
-  const avatarUrl = state.recentDonations.find(d => d.username === username)?.avatar;
-  showWinner(username, coins, avatarUrl);
-});
-
-socket.on('themeChange', (theme) => {
-  document.getElementById('theme-style').href = theme === 'femenino'
-    ? '/css/style-femenino.css'
-    : '/css/style-gamer.css';
+http.listen(PORT, () => {
+  console.log(`Servidor activo en puerto ${PORT}`);
 });
