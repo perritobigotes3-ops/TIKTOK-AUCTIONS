@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración - Subastas</title>
+  <title>Panel Admin</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,89 +12,17 @@
       padding: 20px;
       text-align: center;
     }
-    h1 {
-      color: #00e1ff;
-      margin-bottom: 20px;
-    }
     .container {
       max-width: 400px;
-      margin: 0 auto;
+      margin: auto;
       background: #111;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 225, 255, 0.4);
     }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-size: 14px;
-      color: #ccc;
-      text-align: left;
-    }
-    input, select {
+    input, select, button {
       width: 100%;
       padding: 10px;
-      margin-top: 5px;
+      margin-top: 10px;
       border: none;
       border-radius: 8px;
       font-size: 16px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      background: #00e1ff;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #00bcd4;
-    }
-    .simulate {
-      background: #ffcc00;
-    }
-    .stop {
-      background: #ff4444;
-      color: #fff;
-    }
-    footer {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <h1>Panel de Administración</h1>
-  <div class="container">
-    <label for="duration">⏳ Duración de la subasta (segundos)</label>
-    <input type="number" id="duration" placeholder="Ej: 60" value="60">
-
-    <label for="delay">⏱️ Tiempo de Delay (segundos)</label>
-    <input type="number" id="delay" placeholder="Ej: 10" value="10">
-
-    <label for="theme">🎨 Tema del Overlay</label>
-    <select id="theme">
-      <option value="gamer">Gamer</option>
-      <option value="femenino">Femenino</option>
-    </select>
-
-    <button id="startBtn">🚀 Iniciar Subasta</button>
-    <button id="stopBtn" class="stop">🛑 Detener Subasta</button>
-    <button id="simulateBtn" class="simulate">🎭 Simular Donación</button>
-  </div>
-
-  <footer>
-    TikTok Auctions Overlay © 2025
-  </footer>
-
-  <!-- Scripts correctos -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/admin.js"></script>
-</body>
-</html>
