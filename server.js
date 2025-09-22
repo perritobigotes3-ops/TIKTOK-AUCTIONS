@@ -7,18 +7,28 @@ const axios = require('axios');
 
 const PORT = process.env.PORT || 3000;
 
-// ===== Estado inicial =====
+// ============================
+// Estado inicial
+// ============================
 let state = {
-  participants: {}, 
+  participants: {},
   recentDonations: [],
-  timer: { remaining: 60, delay: 10, inDelay: false },
+  timer: {
+    remaining: 60,
+    delay: 10,
+    delayRemaining: 0,
+    inDelay: false,
+    isRunning: false // <-- NUEVO: subasta activa/finalizada
+  },
   theme: 'gamer'
 };
 
 let interval = null;
 let delayInterval = null;
 
-// ===== Servir carpeta public =====
+// ============================
+// Servir carpeta "public"
+// ============================
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Ruta base
@@ -26,7 +36,9 @@ app.get('/', (req, res) => {
   res.send('Servidor Subasta Overlay activo 🚀');
 });
 
-// ===== Función para obtener avatar de TikTok =====
+// ============================
+// Obtener avatar de TikTok
+// ============================
 async function getTikTokAvatar(username) {
   try {
     const url = `https://www.tiktok.com/@${username}`;
@@ -38,16 +50,20 @@ async function getTikTokAvatar(username) {
   }
 }
 
-// ===== Iniciar subasta =====
+// ============================
+// Iniciar subasta
+// ============================
 function startAuction(duration, delay) {
   clearInterval(interval);
   clearInterval(delayInterval);
 
   state.timer.remaining = duration;
   state.timer.delay = delay;
+  state.timer.delayRemaining = delay;
   state.participants = {};
   state.recentDonations = [];
   state.timer.inDelay = false;
+  state.timer.isRunning = true; // <-- SUBASTA ACTIVA
 
   io.emit('state', state);
 
@@ -65,37 +81,50 @@ function startAuction(duration, delay) {
   console.log(`⏳ Subasta iniciada: ${duration}s + ${delay}s de delay`);
 }
 
-// ===== Delay antes de mostrar ganador =====
+// ============================
+// Delay antes de mostrar ganador
+// ============================
 function startDelay() {
   state.timer.inDelay = true;
-  let delayRemaining = state.timer.delay;
+  state.timer.delayRemaining = state.timer.delay;
 
   io.emit('enterDelay');
 
   delayInterval = setInterval(() => {
-    delayRemaining--;
+    state.timer.delayRemaining--;
 
-    if (delayRemaining <= 0) {
+    if (state.timer.delayRemaining <= 0) {
       clearInterval(delayInterval);
       state.timer.inDelay = false;
       io.emit('delayEnd');
       endAuction();
     }
 
-    io.emit('state', { ...state, timer: { ...state.timer, delayRemaining } });
+    io.emit('state', state);
   }, 1000);
 }
 
-// ===== Finalizar subasta =====
+// ============================
+// Finalizar subasta
+// ============================
 function endAuction() {
+  state.timer.isRunning = false; // <-- BLOQUEAR MÁS DONACIONES
   io.emit('auctionEnd', state);
   console.log('🏆 Subasta finalizada. Ganador enviado al overlay.');
 }
 
-// ===== Simulación de donación =====
+// ============================
+// Simulación de donación
+// ============================
 function simulateDonation(username, coins) {
+  // 🚫 Bloquear si la subasta no está activa
+  if (!state.timer.isRunning) {
+    console.log(`❌ Donación ignorada: Subasta finalizada (${username} - ${coins} monedas)`);
+    return;
+  }
+
   console.log(`💰 Simulación recibida: ${username} donó ${coins} monedas`);
-  
+
   getTikTokAvatar(username).then(avatar => {
     if (!state.participants[username]) state.participants[username] = 0;
     state.participants[username] += coins;
@@ -107,7 +136,9 @@ function simulateDonation(username, coins) {
   });
 }
 
-// ===== Manejo de conexiones socket.io =====
+// ============================
+// Manejo de conexiones socket.io
+// ============================
 io.on('connection', (socket) => {
   console.log('Cliente conectado ✅');
   socket.emit('state', state);
@@ -118,7 +149,7 @@ io.on('connection', (socket) => {
     startAuction(duration, delay);
   });
 
-  // Detener subasta
+  // Detener subasta manualmente
   socket.on('admin:stop', () => {
     console.log("🛑 Subasta detenida manualmente");
     clearInterval(interval);
@@ -131,32 +162,38 @@ io.on('connection', (socket) => {
     simulateDonation(username, coins);
   });
 
-  // Cambiar tema del overlay
+  // Cambiar tema
   socket.on('admin:theme', (theme) => {
     state.theme = theme;
     io.emit('themeChange', theme);
-    console.log(`🎨 Tema cambiado a: ${theme}`);
   });
 
-  // Reiniciar subasta (nuevo botón en panel)
+  // Reiniciar subasta a estado limpio
   socket.on('admin:reset', () => {
     console.log("🔄 Subasta reiniciada manualmente.");
     clearInterval(interval);
     clearInterval(delayInterval);
 
-    // Estado limpio pero mantiene el tema actual
     state = {
-      participants: {}, 
+      participants: {},
       recentDonations: [],
-      timer: { remaining: 60, delay: 10, inDelay: false },
+      timer: {
+        remaining: 60,
+        delay: 10,
+        delayRemaining: 0,
+        inDelay: false,
+        isRunning: false
+      },
       theme: state.theme
     };
 
-    io.emit('state', state); // Envía a overlay y panel
+    io.emit('state', state);
   });
 });
 
-// ===== Iniciar servidor =====
+// ============================
+// Iniciar servidor
+// ============================
 http.listen(PORT, () => {
   console.log(`Servidor activo en puerto ${PORT}`);
 });
