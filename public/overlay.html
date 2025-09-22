@@ -1,33 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Overlay Subasta Pro</title>
-  <link rel="stylesheet" href="/css/style-gamer.css" id="theme-style">
-  <style>
-    /* mínimo inline para asegurar diseño si el css externo falla */
-    body{margin:0;background:#000;color:#fff;font-family:'Segoe UI',sans-serif;overflow:hidden}
-    #overlay-container{display:flex;flex-direction:column;align-items:center;padding:10px;gap:8px;height:100vh;box-sizing:border-box}
-    #info-bar{width:88%;max-width:700px;text-align:center;padding:8px;border-radius:10px;background:rgba(255,0,0,0.18);box-shadow:0 0 12px rgba(255,0,0,0.6)}
-    #auction-timer{font-size:56px;font-weight:900;padding:8px 20px;border-radius:10px;background:rgba(0,0,0,0.6);box-shadow:0 0 18px rgba(0,225,255,0.8)}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay Subasta TikTok</title>
+  <link rel="stylesheet" href="/css/style-gamer.css">
 </head>
 <body>
   <div id="overlay-container">
+
+    <!-- Barra informativa arriba -->
     <div id="info-bar">
       <div id="info-delay">⚡ Delay 10 Segundos</div>
       <div id="info-minimo">💰 Sin mínimo</div>
     </div>
 
+    <!-- Contador grande -->
     <div id="auction-timer-container">
       <div id="auction-timer">00:00</div>
     </div>
 
+    <!-- Ranking de donadores -->
     <div id="ranking">
       <div class="ranking-title">🏆 Top Donadores</div>
     </div>
 
+    <!-- VS dinámico -->
     <div id="vs-container">
       <div class="vs-box">
         <div class="vs-side">
@@ -42,17 +40,18 @@
       </div>
     </div>
 
+    <!-- Pantalla de ganador -->
     <div id="winnerScreen">
       <div id="winnerTitle">🎉 ¡Felicidades!</div>
-      <div id="winnerAvatar"><img src="/assets/avatar-placeholder.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <div id="winnerAvatar">
+        <img src="/assets/avatar-placeholder.png" alt="Ganador" style="width:100%;height:100%;object-fit:cover">
+      </div>
       <div id="winnerCoins">Donó 0 💰</div>
     </div>
+
   </div>
 
-  <script>
-    // for Socket.IO path resolution when served behind Render or similar
-    window.SOCKET_IO_ORIGIN = window.location.origin;
-  </script>
+  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/overlay.js"></script>
 </body>
