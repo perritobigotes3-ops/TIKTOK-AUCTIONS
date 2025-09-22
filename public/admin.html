@@ -1,55 +1,70 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Panel de Administración - Subasta Pro</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#0a0a0a; color:#fff; padding:20px; }
-    .container { max-width:420px; margin:auto; background:#111; padding:18px; border-radius:12px; }
-    label { display:block; margin-top:12px; color:#ccc; }
-    input,select,button { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:none; font-size:15px; }
-    button { background:#00e1ff; color:#000; font-weight:700; cursor:pointer; }
-    .danger { background:#ff4444; color:#fff; }
-    .muted { background:#333; color:#fff; }
-    hr { border-color:#222; margin:12px 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { color: #00e1ff; margin-bottom: 20px; }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: #111;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 225, 255, 0.4);
+    }
+    label { display: block; margin-top: 15px; text-align: left; color: #ccc; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button { cursor: pointer; margin-top: 15px; font-weight: bold; }
+    .start { background: #00e1ff; color: #000; }
+    .stop { background: #ff4444; color: #fff; }
+    .reset { background: #ff6600; color: #fff; }
+    .simulate { background: #ffd700; color: #000; }
   </style>
 </head>
 <body>
   <h1>Panel de Administración</h1>
   <div class="container">
     <label>⏳ Duración de la subasta (segundos)</label>
-    <input id="duration" type="number" value="60">
+    <input type="number" id="duration" value="60">
 
-    <label>⏱ Tiempo de Delay (segundos)</label>
-    <input id="delay" type="number" value="10">
+    <label>⏱️ Tiempo de Delay (segundos)</label>
+    <input type="number" id="delay" value="10">
 
     <label>🎨 Tema</label>
     <select id="theme">
-      <option value="gamer">Gamer (azul marino)</option>
-      <option value="femenino">Femenino (negro)</option>
+      <option value="gamer">Gamer</option>
+      <option value="femenino">Femenino</option>
     </select>
 
-    <button id="startBtn">🚀 Iniciar Subasta</button>
-    <button id="stopBtn" class="danger">🛑 Detener Subasta</button>
-    <button id="resetBtn" class="muted">🔄 Reiniciar Subasta</button>
+    <button id="startBtn" class="start">🚀 Iniciar Subasta</button>
+    <button id="stopBtn" class="stop">🛑 Detener Subasta</button>
+    <button id="resetBtn" class="reset">🔄 Reiniciar Subasta</button>
 
     <hr>
 
-    <label>🎭 Simulación - Nombre</label>
-    <input id="simName" type="text" placeholder="Ej: Josh">
-    <label>💰 Simulación - Monedas</label>
-    <input id="simCoins" type="number" value="10">
-    <button id="simulateBtn">💸 Simular Donación</button>
+    <label>🎭 Simular Nombre</label>
+    <input type="text" id="simName" placeholder="Ej: Josh">
 
-    <hr>
+    <label>💰 Simular Monedas</label>
+    <input type="number" id="simCoins" value="10">
 
-    <h3>⚡ Texto Informativo (solo visual)</h3>
-    <label>Segundos Snipe</label>
-    <input id="snipeText" type="text" placeholder="⚡ 10 SEGUNDOS SNIPE !!">
-    <label>Mínimo puntos</label>
-    <input id="minText" type="text" placeholder="💰 MÍNIMO 0 PUNTOS">
-    <button id="updateInfoBtn">Actualizar Texto</button>
+    <button id="simulateBtn" class="simulate">💸 Simular Donación</button>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
