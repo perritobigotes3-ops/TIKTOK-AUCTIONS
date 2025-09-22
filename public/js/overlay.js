@@ -1,24 +1,22 @@
 // public/js/overlay.js
-// Conexión robusta con el servidor usando socket.io
-const socket = io.connect(window.location.origin);
+// Conexion robusta al mismo origen
+const socket = io.connect(window.SOCKET_IO_ORIGIN || window.location.origin);
 
-// ===== Elementos del DOM =====
+// ===== Elementos HTML =====
 const infoDelayEl = document.getElementById('info-delay');
 const infoMinimoEl = document.getElementById('info-minimo');
 const timerEl = document.getElementById('auction-timer');
 const rankingEl = document.getElementById('ranking');
-
 const vsLeft = document.getElementById('vs-left');
 const vsRight = document.getElementById('vs-right');
 const vsLeftCoins = document.getElementById('vs-left-coins');
 const vsRightCoins = document.getElementById('vs-right-coins');
-
 const winnerScreen = document.getElementById('winnerScreen');
 const winnerTitle = document.getElementById('winnerTitle');
 const winnerCoins = document.getElementById('winnerCoins');
 const winnerAvatarImg = document.querySelector('#winnerAvatar img');
 
-// ===== Funciones auxiliares =====
+// ===== Funciones utilitarias =====
 function formatTime(sec) {
   if (sec < 0) sec = 0;
   const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -26,14 +24,25 @@ function formatTime(sec) {
   return `${m}:${s}`;
 }
 
-// Si no hay foto, poner emoji 🔥
+// Función para obtener el avatar o 🔥 si no tiene foto
 function findAvatar(username, recent) {
-  if (!recent) return '/assets/avatar-placeholder.png';
+  const defaultFlame = 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg'; // 🔥 emoji
+
+  if (!recent || !Array.isArray(recent)) {
+    return defaultFlame;
+  }
+
   const found = recent.find(r => r.username === username);
-  return found && found.avatar ? found.avatar : 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg'; // 🔥 emoji
+
+  // Si no tiene avatar, usamos el emoji 🔥
+  if (!found || !found.avatar || found.avatar.trim() === '') {
+    return defaultFlame;
+  }
+
+  return found.avatar;
 }
 
-// ===== Renderizar Contador =====
+// ===== Renderizar contador =====
 function renderTimer(state) {
   if (state.timer.inDelay) {
     const dr = state.timer.delayRemaining ?? state.timer.delay;
@@ -42,8 +51,11 @@ function renderTimer(state) {
   } else {
     const t = state.timer.remaining ?? 0;
     timerEl.textContent = formatTime(t);
-    if (t <= 10) timerEl.classList.add('blink');
-    else timerEl.classList.remove('blink');
+    if (t <= 10) {
+      timerEl.classList.add('blink');
+    } else {
+      timerEl.classList.remove('blink');
+    }
   }
 }
 
@@ -61,9 +73,12 @@ function renderRanking(participants, recentDonations) {
     const avatar = findAvatar(username, recentDonations);
     const div = document.createElement('div');
     div.className = 'participant';
+
     div.innerHTML = `
       <div class="left">
-        <div class="avatar"><img src="${avatar}" alt="${username}"></div>
+        <div class="avatar">
+          <img src="${avatar}" alt="${username}">
+        </div>
         <div class="name">${username}</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px">
@@ -71,16 +86,18 @@ function renderRanking(participants, recentDonations) {
         <div class="medal">${medals[idx] || ''}</div>
       </div>
     `;
+
     rankingEl.appendChild(div);
   });
 }
 
 // ===== Renderizar VS =====
-function renderVS(participants) {
+function renderVS(participants, recentDonations) {
   const sorted = Object.entries(participants || {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2);
 
+  // Jugador izquierdo
   if (sorted[0]) {
     vsLeft.textContent = sorted[0][0];
     vsLeftCoins.textContent = `${sorted[0][1]} 💰`;
@@ -89,6 +106,7 @@ function renderVS(participants) {
     vsLeftCoins.textContent = '0 💰';
   }
 
+  // Jugador derecho
   if (sorted[1]) {
     vsRight.textContent = sorted[1][0];
     vsRightCoins.textContent = `${sorted[1][1]} 💰`;
@@ -98,32 +116,30 @@ function renderVS(participants) {
   }
 }
 
-// ===== Mostrar Pantalla del Ganador =====
+// ===== Pantalla de ganador =====
 function showWinner(username, coins, avatar) {
   winnerTitle.textContent = `🎉 ¡Felicidades ${username}! 🎉`;
   winnerCoins.textContent = `Donó ${coins} 💰`;
-  winnerAvatarImg.src = avatar || '/assets/avatar-placeholder.png';
-
+  winnerAvatarImg.src = avatar || 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg';
   winnerScreen.style.display = 'flex';
 
-  // Mantener visible por más tiempo
+  // Ocultar después de 8 segundos
   setTimeout(() => {
     winnerScreen.style.display = 'none';
   }, 8000);
 }
 
-// ===== Eventos Socket.IO =====
+// ===== Eventos de Socket.io =====
 socket.on('connect', () => console.log('Overlay conectado ✅'));
 socket.on('disconnect', () => console.log('Overlay desconectado ❌'));
 
-// Estado general en tiempo real
-socket.on('state', (state) => {
-  renderTimer(state);
-  renderRanking(state.participants, state.recentDonations);
-  renderVS(state.participants);
+socket.on('state', (s) => {
+  renderTimer(s);
+  renderRanking(s.participants, s.recentDonations);
+  renderVS(s.participants, s.recentDonations);
 });
 
-// Información personalizada (Delay y Mínimo)
+// Actualización de la barra de información
 socket.on('updateInfo', (data) => {
   if (!data) return;
   infoDelayEl.textContent = `⚡ ${data.delayText || ''}`;
@@ -138,9 +154,10 @@ socket.on('auctionEnd', (payload) => {
     if (!sorted.length) return;
 
     const [username, coins] = sorted[0];
-    const avatar = (st.recentDonations || []).find(d => d.username === username)?.avatar;
+    const avatar = findAvatar(username, st.recentDonations);
+
     showWinner(username, coins, avatar);
   } catch (e) {
-    console.error('Error mostrando ganador en overlay:', e);
+    console.error('Error auctionEnd overlay:', e);
   }
 });
