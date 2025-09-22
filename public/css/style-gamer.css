@@ -1,54 +1,56 @@
-/* ======= Overlay Estilo Gamer Profesional ======= */
+/* ===== Overlay General ===== */
 body {
   margin: 0;
   padding: 0;
+  background: #000;
   font-family: 'Segoe UI', sans-serif;
-  background: #000; /* Fondo negro sólido */
   color: #fff;
   overflow: hidden;
 }
 
 #overlay-container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 10px;
+  gap: 2vw;
+  padding: 2vw;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
-  gap: 10px; /* separa las secciones */
+  transform: scale(1);
+  transform-origin: top center;
 }
 
-/* ======= Barra de información (Delay y Mínimo) ======= */
+/* ===== Barra de Información ===== */
 #info-bar {
-  width: 90%;
-  max-width: 500px;
+  width: 95%;
+  max-width: 600px;
   text-align: center;
   padding: 10px;
   background: rgba(0, 0, 0, 0.85);
   border: 2px solid #ff005c;
   border-radius: 10px;
   box-shadow: 0 0 15px #ff005c;
-  font-size: 18px;
+  font-size: clamp(16px, 3vw, 24px);
   font-weight: bold;
-  color: #fff;
   text-shadow: 0 0 8px #ff005c;
 }
 
-/* ======= Contador ======= */
+/* ===== Contador ===== */
 #auction-timer-container {
   background: rgba(0, 0, 0, 0.85);
   border: 2px solid #00e1ff;
   border-radius: 10px;
   box-shadow: 0 0 15px #00e1ff;
-  padding: 10px 20px;
+  padding: 1vw 2vw;
   text-align: center;
+  width: 90%;
+  max-width: 600px;
 }
 
 #auction-timer {
-  font-size: 60px;
+  font-size: clamp(40px, 12vw, 100px);
   font-weight: 900;
   text-shadow: 0 0 15px #00e1ff, 0 0 30px #00bcd4;
 }
@@ -62,20 +64,20 @@ body {
   to { opacity: 0.4; }
 }
 
-/* ======= Ranking ======= */
+/* ===== Ranking ===== */
 #ranking {
-  width: 90%;
-  max-width: 500px;
+  width: 95%;
+  max-width: 600px;
   background: rgba(0,0,0,0.85);
   border: 2px solid #ffcc00;
-  border-radius: 10px;
+  border-radius: 15px;
   box-shadow: 0 0 15px #ffcc00;
   padding: 10px;
 }
 
 .ranking-title {
   text-align: center;
-  font-size: 22px;
+  font-size: clamp(18px, 4vw, 28px);
   margin-bottom: 10px;
   color: #ffcc00;
   text-shadow: 0 0 8px #ffcc00;
@@ -98,8 +100,8 @@ body {
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid #fff;
@@ -112,7 +114,7 @@ body {
 }
 
 .name {
-  font-size: 16px;
+  font-size: clamp(14px, 4vw, 20px);
   font-weight: bold;
   max-width: 140px;
   overflow: hidden;
@@ -121,27 +123,27 @@ body {
 }
 
 .coins {
-  font-size: 16px;
+  font-size: clamp(14px, 4vw, 20px);
   font-weight: bold;
   color: gold;
 }
 
 .medal {
-  font-size: 20px;
+  font-size: clamp(16px, 4vw, 24px);
 }
 
-/* ======= VS ======= */
+/* ===== VS ===== */
 #vs-container {
-  width: 90%;
-  max-width: 500px;
+  width: 95%;
+  max-width: 600px;
 }
 
 .vs-box {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  border-radius: 10px;
+  align-items: center;
+  padding: 2vw;
+  border-radius: 15px;
   background: rgba(0,0,0,0.9);
   border: 2px solid #ff5722;
   box-shadow: 0 0 15px #ff5722;
@@ -150,23 +152,27 @@ body {
 .vs-side {
   flex: 1;
   text-align: center;
+  min-width: 0;
 }
 
 .vs-name {
-  font-size: 20px;
+  font-size: clamp(16px, 4vw, 28px);
   font-weight: 900;
   color: #fff;
   text-shadow: 0 0 6px #fff;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .vs-coins {
-  font-size: 18px;
+  font-size: clamp(14px, 3.5vw, 22px);
   color: #ffd66b;
   margin-top: 4px;
 }
 
 .flame {
-  font-size: 32px;
+  font-size: clamp(20px, 5vw, 36px);
   animation: flame 1s infinite alternate;
   color: orangered;
   text-shadow: 0 0 15px #ff6600;
@@ -177,7 +183,7 @@ body {
   to { transform: scale(1.2); opacity: 0.7; }
 }
 
-/* ======= Pantalla ganador ======= */
+/* ===== Pantalla del Ganador ===== */
 #winnerScreen {
   position: fixed;
   inset: 0;
@@ -185,12 +191,12 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background: rgba(0,0,0,1);
+  background: rgba(0,0,0,0.95);
   z-index: 9999;
 }
 
 #winnerTitle {
-  font-size: 48px;
+  font-size: clamp(32px, 8vw, 60px);
   font-weight: 900;
   text-shadow: 0 0 15px #fff, 0 0 30px #ff0, 0 0 50px #f90;
   margin-bottom: 20px;
@@ -206,13 +212,14 @@ body {
   overflow: hidden;
 }
 
-#winnerCoins {
-  font-size: 28px;
-  color: gold;
-  animation: sparkle 1.5s infinite;
+#winnerAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-@keyframes sparkle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+#winnerCoins {
+  font-size: clamp(20px, 5vw, 32px);
+  color: gold;
+  animation: sparkle 1.5s infinite;
 }
