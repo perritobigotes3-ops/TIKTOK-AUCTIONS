@@ -1,8 +1,6 @@
-
 {
-  "name": "subasta-overlay",
+  "name": "tiktok-auctions",
   "version": "1.0.0",
-  "description": "Overlay de subastas estilo 14alls para TikTok Studio",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,6 +8,7 @@
   "dependencies": {
     "axios": "^1.4.0",
     "express": "^4.18.2",
-    "socket.io": "^4.7.0"
+    "socket.io": "^4.7.0",
+    "tiktok-live-connector": "^1.0.1"
   }
 }
