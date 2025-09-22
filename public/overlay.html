@@ -4,209 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Overlay Subasta Pro</title>
-  <link rel="stylesheet" href="/css/style-gamer.css" id="theme-style">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-evenly;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Contador */
-    #auction-timer {
-      font-size: 14vw; /* Tamaño dinámico */
-      font-weight: bold;
-      text-shadow: 0 0 20px #00e1ff, 0 0 40px #00bcd4;
-    }
-
-    #auction-timer.blink {
-      animation: blink 0.8s infinite;
-    }
-
-    @keyframes blink {
-      from { opacity: 1; }
-      to { opacity: 0.3; }
-    }
-
-    /* Ranking */
-    #ranking {
-      width: 95%;
-      max-width: 600px;
-      background: rgba(0,0,0,0.8);
-      border: 3px solid #ffcc00;
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 0 25px #ffcc00;
-    }
-
-    .ranking-title {
-      text-align: center;
-      font-size: 8vw;
-      margin-bottom: 20px;
-      color: #ffcc00;
-      text-shadow: 0 0 15px #ffcc00;
-    }
-
-    .participant {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px;
-      margin-bottom: 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.08);
-    }
-
-    .participant .left {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 3px solid #fff;
-    }
-
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .emoji-avatar {
-      font-size: 50px;
-    }
-
-    .name {
-      font-size: 6vw;
-      font-weight: bold;
-    }
-
-    .coins {
-      font-size: 6vw;
-      color: gold;
-      font-weight: bold;
-    }
-
-    .medal {
-      font-size: 7vw;
-    }
-
-    /* VS */
-    #vs-container {
-      width: 95%;
-      max-width: 600px;
-      background: rgba(0,0,0,0.85);
-      border: 3px solid #ff5722;
-      box-shadow: 0 0 25px #ff5722;
-      padding: 20px;
-      border-radius: 15px;
-      text-align: center;
-    }
-
-    .vs-box {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-    }
-
-    .vs-name {
-      font-size: 7vw;
-      font-weight: bold;
-    }
-
-    .vs-coins {
-      font-size: 6vw;
-      color: #ffd66b;
-    }
-
-    .flame {
-      font-size: 8vw;
-      animation: flame 1s infinite alternate;
-      color: orangered;
-      text-shadow: 0 0 25px #ff6600;
-    }
-
-    @keyframes flame {
-      from { transform: scale(1); opacity: 1; }
-      to { transform: scale(1.2); opacity: 0.7; }
-    }
-
-    /* Pantalla de ganador */
-    #winnerScreen {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.95);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 9999;
-    }
-
-    #winnerTitle {
-      font-size: 10vw;
-      text-align: center;
-      color: gold;
-      text-shadow: 0 0 20px gold, 0 0 40px #ffcc00;
-      margin-bottom: 20px;
-    }
-
-    #winnerAvatar img {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      border: 8px solid gold;
-      box-shadow: 0 0 50px gold;
-    }
-
-    #winnerCoins {
-      font-size: 8vw;
-      color: gold;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="/public/css/style.css">
 </head>
 <body>
-  <div id="auction-timer">00:00</div>
+  <div id="overlay-container">
+    <!-- Barra de información -->
+    <div id="info-bar">
+      <div id="info-delay">⚡ Delay 10 Segundos</div>
+      <div id="info-minimo">💰 Sin mínimo</div>
+    </div>
 
-  <div id="ranking">
-    <div class="ranking-title">🏆 Top Donadores</div>
-  </div>
+    <!-- Contador -->
+    <div id="auction-timer-container">
+      <div id="auction-timer">00:00</div>
+    </div>
 
-  <div id="vs-container">
-    <div class="vs-box">
-      <div>
-        <div id="vs-left" class="vs-name">—</div>
-        <div id="vs-left-coins" class="vs-coins">0 💰</div>
-      </div>
-      <div class="flame">🔥 VS 🔥</div>
-      <div>
-        <div id="vs-right" class="vs-name">—</div>
-        <div id="vs-right-coins" class="vs-coins">0 💰</div>
+    <!-- Ranking -->
+    <div id="ranking"></div>
+
+    <!-- VS Dinámico -->
+    <div id="vs-container">
+      <div class="vs-box">
+        <div class="vs-side">
+          <div id="vs-left" class="vs-name">—</div>
+          <div id="vs-left-coins" class="vs-coins">0 💰</div>
+        </div>
+        <div class="flame">🔥 VS 🔥</div>
+        <div class="vs-side">
+          <div id="vs-right" class="vs-name">—</div>
+          <div id="vs-right-coins" class="vs-coins">0 💰</div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Pantalla del ganador -->
   <div id="winnerScreen">
-    <div id="winnerTitle">🎉 ¡Felicidades!</div>
-    <div id="winnerAvatar"><img src="/assets/winner-fire.png"></div>
-    <div id="winnerCoins">Donó 0 💰</div>
+    <div id="winnerAvatar">
+      <img src="/public/assets/avatar-placeholder.png" alt="Ganador">
+    </div>
+    <div id="winnerTitle">🎉 ¡Felicidades! 🎉</div>
+    <div id="winnerCoins"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/overlay.js"></script>
+  <script src="/public/js/overlay.js"></script>
 </body>
 </html>
