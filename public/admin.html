@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración</title>
+  <title>Panel de Administración - Subasta Pro</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #000;
+      background: #0a0a0a;
       color: #fff;
       padding: 20px;
       text-align: center;
@@ -19,50 +19,50 @@
       background: #111;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 225, 255, 0.4);
+      box-shadow: 0 0 15px rgba(0,225,255,0.4);
     }
-    label { display: block; margin-top: 15px; text-align: left; color: #ccc; }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
+    label { display: block; margin-top: 15px; font-size: 14px; color: #ccc; text-align: left; }
+    input, select {
+      width: 100%; padding: 10px; margin-top: 5px;
+      border: none; border-radius: 8px; font-size: 16px;
     }
-    button { cursor: pointer; margin-top: 15px; font-weight: bold; }
-    .start { background: #00e1ff; color: #000; }
+    button {
+      width: 100%; padding: 12px; margin-top: 15px;
+      border: none; border-radius: 8px;
+      font-size: 16px; background: #00e1ff; color: #000; font-weight: bold;
+      cursor: pointer; transition: 0.3s;
+    }
+    button:hover { background: #00bcd4; }
+    .simulate { background: #ffcc00; }
     .stop { background: #ff4444; color: #fff; }
     .reset { background: #ff6600; color: #fff; }
-    .simulate { background: #ffd700; color: #000; }
   </style>
 </head>
 <body>
   <h1>Panel de Administración</h1>
   <div class="container">
     <label>⏳ Duración de la subasta (segundos)</label>
-    <input type="number" id="duration" value="60">
+    <input type="number" id="duration" placeholder="Ej: 60" value="60">
 
     <label>⏱️ Tiempo de Delay (segundos)</label>
-    <input type="number" id="delay" value="10">
+    <input type="number" id="delay" placeholder="Ej: 10" value="10">
 
-    <label>🎨 Tema</label>
+    <label>🎨 Tema del Overlay</label>
     <select id="theme">
       <option value="gamer">Gamer</option>
       <option value="femenino">Femenino</option>
     </select>
 
-    <button id="startBtn" class="start">🚀 Iniciar Subasta</button>
+    <!-- Textos informativos -->
+    <label>⚡ Texto de Delay</label>
+    <input type="text" id="infoDelay" placeholder="Ej: Delay 10 Segundos" value="Delay 10 Segundos">
+
+    <label>💰 Texto de Mínimo</label>
+    <input type="text" id="infoMinimo" placeholder="Ej: Sin mínimo" value="Sin mínimo">
+
+    <button id="startBtn">🚀 Iniciar Subasta</button>
     <button id="stopBtn" class="stop">🛑 Detener Subasta</button>
     <button id="resetBtn" class="reset">🔄 Reiniciar Subasta</button>
-
-    <hr>
-
-    <label>🎭 Simular Nombre</label>
-    <input type="text" id="simName" placeholder="Ej: Josh">
-
-    <label>💰 Simular Monedas</label>
-    <input type="number" id="simCoins" value="10">
 
     <button id="simulateBtn" class="simulate">💸 Simular Donación</button>
   </div>
