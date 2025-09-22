@@ -1,5 +1,4 @@
 // public/js/overlay.js
-// Conexion robusta al mismo origen
 const socket = io.connect(window.SOCKET_IO_ORIGIN || window.location.origin);
 
 // ===== Elementos HTML =====
@@ -24,22 +23,18 @@ function formatTime(sec) {
   return `${m}:${s}`;
 }
 
-// Función para obtener el avatar o 🔥 si no tiene foto
-function findAvatar(username, recent) {
-  const defaultFlame = 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg'; // 🔥 emoji
+// Devuelve HTML: avatar o emoji 🔥 si no hay foto
+function getAvatarHTML(username, recent) {
+  const defaultEmoji = `<div class="emoji-flame">🔥</div>`;
 
-  if (!recent || !Array.isArray(recent)) {
-    return defaultFlame;
-  }
+  if (!recent || !Array.isArray(recent)) return defaultEmoji;
 
   const found = recent.find(r => r.username === username);
-
-  // Si no tiene avatar, usamos el emoji 🔥
   if (!found || !found.avatar || found.avatar.trim() === '') {
-    return defaultFlame;
+    return defaultEmoji;
   }
 
-  return found.avatar;
+  return `<img src="${found.avatar}" alt="${username}">`;
 }
 
 // ===== Renderizar contador =====
@@ -70,15 +65,14 @@ function renderRanking(participants, recentDonations) {
   const medals = ['🥇', '🥈', '🥉'];
 
   sorted.forEach(([username, coins], idx) => {
-    const avatar = findAvatar(username, recentDonations);
+    const avatarHTML = getAvatarHTML(username, recentDonations);
+
     const div = document.createElement('div');
     div.className = 'participant';
 
     div.innerHTML = `
       <div class="left">
-        <div class="avatar">
-          <img src="${avatar}" alt="${username}">
-        </div>
+        <div class="avatar">${avatarHTML}</div>
         <div class="name">${username}</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px">
@@ -86,18 +80,16 @@ function renderRanking(participants, recentDonations) {
         <div class="medal">${medals[idx] || ''}</div>
       </div>
     `;
-
     rankingEl.appendChild(div);
   });
 }
 
 // ===== Renderizar VS =====
-function renderVS(participants, recentDonations) {
+function renderVS(participants) {
   const sorted = Object.entries(participants || {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2);
 
-  // Jugador izquierdo
   if (sorted[0]) {
     vsLeft.textContent = sorted[0][0];
     vsLeftCoins.textContent = `${sorted[0][1]} 💰`;
@@ -106,7 +98,6 @@ function renderVS(participants, recentDonations) {
     vsLeftCoins.textContent = '0 💰';
   }
 
-  // Jugador derecho
   if (sorted[1]) {
     vsRight.textContent = sorted[1][0];
     vsRightCoins.textContent = `${sorted[1][1]} 💰`;
@@ -117,13 +108,23 @@ function renderVS(participants, recentDonations) {
 }
 
 // ===== Pantalla de ganador =====
-function showWinner(username, coins, avatar) {
+function showWinner(username, coins, recent) {
+  const avatarHTML = getAvatarHTML(username, recent);
+
+  // Si es imagen, la asignamos
+  if (avatarHTML.includes('<img')) {
+    const temp = document.createElement('div');
+    temp.innerHTML = avatarHTML;
+    winnerAvatarImg.src = temp.querySelector('img').src;
+  } else {
+    // Si no tiene avatar, mostramos 🔥
+    winnerAvatarImg.src = 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg';
+  }
+
   winnerTitle.textContent = `🎉 ¡Felicidades ${username}! 🎉`;
   winnerCoins.textContent = `Donó ${coins} 💰`;
-  winnerAvatarImg.src = avatar || 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg';
   winnerScreen.style.display = 'flex';
 
-  // Ocultar después de 8 segundos
   setTimeout(() => {
     winnerScreen.style.display = 'none';
   }, 8000);
@@ -136,17 +137,15 @@ socket.on('disconnect', () => console.log('Overlay desconectado ❌'));
 socket.on('state', (s) => {
   renderTimer(s);
   renderRanking(s.participants, s.recentDonations);
-  renderVS(s.participants, s.recentDonations);
+  renderVS(s.participants);
 });
 
-// Actualización de la barra de información
 socket.on('updateInfo', (data) => {
   if (!data) return;
   infoDelayEl.textContent = `⚡ ${data.delayText || ''}`;
   infoMinimoEl.textContent = `💰 ${data.minimoText || ''}`;
 });
 
-// Cuando finaliza la subasta
 socket.on('auctionEnd', (payload) => {
   try {
     const st = payload.state || payload;
@@ -154,9 +153,7 @@ socket.on('auctionEnd', (payload) => {
     if (!sorted.length) return;
 
     const [username, coins] = sorted[0];
-    const avatar = findAvatar(username, st.recentDonations);
-
-    showWinner(username, coins, avatar);
+    showWinner(username, coins, st.recentDonations);
   } catch (e) {
     console.error('Error auctionEnd overlay:', e);
   }
