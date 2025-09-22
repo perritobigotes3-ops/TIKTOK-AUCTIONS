@@ -1,72 +1,67 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración - Subasta Pro</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel Admin - Subasta Pro</title>
+  <link rel="stylesheet" href="/css/admin-basic.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0a0a0a;
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 { color: #00e1ff; margin-bottom: 20px; }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      background: #111;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,225,255,0.4);
-    }
-    label { display: block; margin-top: 15px; font-size: 14px; color: #ccc; text-align: left; }
-    input, select {
-      width: 100%; padding: 10px; margin-top: 5px;
-      border: none; border-radius: 8px; font-size: 16px;
-    }
-    button {
-      width: 100%; padding: 12px; margin-top: 15px;
-      border: none; border-radius: 8px;
-      font-size: 16px; background: #00e1ff; color: #000; font-weight: bold;
-      cursor: pointer; transition: 0.3s;
-    }
-    button:hover { background: #00bcd4; }
-    .simulate { background: #ffcc00; }
-    .stop { background: #ff4444; color: #fff; }
-    .reset { background: #ff6600; color: #fff; }
+    body{background:#000;color:#fff;font-family:Arial;padding:18px}
+    .card{max-width:420px;margin:0 auto;background:#111;padding:16px;border-radius:10px;box-shadow:0 0 18px rgba(0,225,255,0.12)}
+    label{display:block;margin-top:10px;color:#ccc}
+    input,select,button{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;font-size:15px}
+    button{cursor:pointer}
+    .row{display:flex;gap:8px}
+    .row>input{flex:1}
   </style>
 </head>
 <body>
-  <h1>Panel de Administración</h1>
-  <div class="container">
-    <label>⏳ Duración de la subasta (segundos)</label>
-    <input type="number" id="duration" placeholder="Ej: 60" value="60">
+  <div class="card">
+    <h2 style="color:#00e1ff;margin:0 0 8px 0">Panel de Administración</h2>
 
-    <label>⏱️ Tiempo de Delay (segundos)</label>
-    <input type="number" id="delay" placeholder="Ej: 10" value="10">
+    <label>⏳ Duración (segundos)</label>
+    <input id="duration" type="number" value="60">
 
-    <label>🎨 Tema del Overlay</label>
+    <label>⏱ Delay (segundos)</label>
+    <input id="delay" type="number" value="10">
+
+    <label>🎨 Tema</label>
     <select id="theme">
       <option value="gamer">Gamer</option>
       <option value="femenino">Femenino</option>
     </select>
 
-    <!-- Textos informativos -->
-    <label>⚡ Texto de Delay</label>
-    <input type="text" id="infoDelay" placeholder="Ej: Delay 10 Segundos" value="Delay 10 Segundos">
+    <label>⚡ Texto Delay</label>
+    <input id="infoDelay" type="text" value="10 SEGUNDOS SNIPE !!">
 
-    <label>💰 Texto de Mínimo</label>
-    <input type="text" id="infoMinimo" placeholder="Ej: Sin mínimo" value="Sin mínimo">
+    <label>💰 Texto Mínimo</label>
+    <input id="infoMinimo" type="text" value="MÍNIMO 0 PUNTOS">
 
-    <button id="startBtn">🚀 Iniciar Subasta</button>
-    <button id="stopBtn" class="stop">🛑 Detener Subasta</button>
-    <button id="resetBtn" class="reset">🔄 Reiniciar Subasta</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <button id="startBtn" style="background:#00e1ff;color:#000">🚀 Iniciar</button>
+      <button id="stopBtn" style="background:#ff4444">🛑 Detener</button>
+    </div>
 
-    <button id="simulateBtn" class="simulate">💸 Simular Donación</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <button id="resetBtn" style="background:#ff6600">🔄 Reiniciar</button>
+      <button id="simulateBtn" style="background:#ffd700;color:#000">💸 Simular</button>
+    </div>
+
+    <label style="margin-top:12px">🎭 Nombre simular</label>
+    <input id="simName" type="text" placeholder="Ej: Josh">
+
+    <label>💎 Monedas simular</label>
+    <input id="simCoins" type="number" value="10">
+
+    <hr style="margin:12px 0;border-color:#222">
+
+    <h4 style="margin:6px 0;color:#fff">📜 Historial (últimas subastas)</h4>
+    <div id="history" style="max-height:160px;overflow:auto;background:#000;border-radius:8px;padding:8px;border:1px solid #222"></div>
   </div>
 
+  <script>
+    window.SOCKET_IO_ORIGIN = window.location.origin;
+  </script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/admin.js"></script>
 </body>
