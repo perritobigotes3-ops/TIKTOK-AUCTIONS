@@ -2,7 +2,7 @@
 body {
   margin: 0;
   padding: 0;
-  background: #000;
+  background: #000; /* Fondo negro sólido */
   font-family: 'Segoe UI', sans-serif;
   color: #fff;
   overflow: hidden;
@@ -113,6 +113,7 @@ body {
   object-fit: cover;
 }
 
+/* 🔥 Avatar vacío con emoji */
 .emoji-flame {
   font-size: 30px;
   display: flex;
@@ -120,6 +121,10 @@ body {
   justify-content: center;
   width: 45px;
   height: 45px;
+  color: orange;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  text-shadow: 0 0 8px orange, 0 0 15px red;
 }
 
 .name {
@@ -232,14 +237,4 @@ body {
   color: gold;
   margin-top: 10px;
   text-shadow: 0 0 10px gold;
-}
-/* 🔥 Avatar vacío con emoji */
-.emoji-flame {
-  font-size: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 45px;
-  height: 45px;
-  color: orange;
 }
