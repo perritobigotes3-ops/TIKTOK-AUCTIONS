@@ -1,9 +1,9 @@
-/* ======= Estilos Gamer ======= */
+/* ======= Overlay Estilo Gamer Profesional ======= */
 body {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: #000814; /* Azul marino oscuro */
+  background: #000; /* Fondo negro sólido */
   color: #fff;
   overflow: hidden;
 }
@@ -15,41 +15,42 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px;
+  justify-content: flex-start;
+  padding: 10px;
   box-sizing: border-box;
+  gap: 10px; /* separa las secciones */
 }
 
-/* ======= Sección SNIPE y MÍNIMO ======= */
+/* ======= Barra de información (Delay y Mínimo) ======= */
 #info-bar {
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #ff005c;
-  border-radius: 12px;
-  padding: 12px 20px;
-  margin-bottom: 15px;
+  width: 90%;
+  max-width: 500px;
   text-align: center;
-  font-size: 22px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #ff005c;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #ff005c;
+  font-size: 18px;
   font-weight: bold;
   color: #fff;
   text-shadow: 0 0 8px #ff005c;
-  box-shadow: 0 0 20px rgba(255, 0, 92, 0.8);
 }
 
 /* ======= Contador ======= */
 #auction-timer-container {
   background: rgba(0, 0, 0, 0.85);
   border: 2px solid #00e1ff;
-  box-shadow: 0 0 20px #00e1ff;
-  border-radius: 12px;
-  padding: 20px 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #00e1ff;
+  padding: 10px 20px;
   text-align: center;
-  margin-bottom: 20px;
 }
 
 #auction-timer {
-  font-size: 80px;
+  font-size: 60px;
   font-weight: 900;
-  text-shadow: 0 0 20px #00e1ff, 0 0 40px #00bcd4;
+  text-shadow: 0 0 15px #00e1ff, 0 0 30px #00bcd4;
 }
 
 #auction-timer.blink {
@@ -58,52 +59,50 @@ body {
 
 @keyframes blink {
   from { opacity: 1; }
-  to { opacity: 0.3; }
+  to { opacity: 0.4; }
 }
 
 /* ======= Ranking ======= */
 #ranking {
   width: 90%;
-  max-width: 600px;
-  background: rgba(0,0,0,0.75);
+  max-width: 500px;
+  background: rgba(0,0,0,0.85);
   border: 2px solid #ffcc00;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 0 25px rgba(255, 204, 0, 0.8);
+  border-radius: 10px;
+  box-shadow: 0 0 15px #ffcc00;
+  padding: 10px;
 }
 
 .ranking-title {
   text-align: center;
-  font-size: 28px;
-  margin-bottom: 15px;
+  font-size: 22px;
+  margin-bottom: 10px;
   color: #ffcc00;
-  text-shadow: 0 0 12px #ffcc00;
+  text-shadow: 0 0 8px #ffcc00;
 }
 
 .participant {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 8px;
   background: rgba(255,255,255,0.05);
-  transition: transform 0.3s;
 }
 
 .participant .left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .avatar {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid #fff;
-  box-shadow: 0 0 12px rgba(255,255,255,0.8);
+  border: 2px solid #fff;
 }
 
 .avatar img {
@@ -113,41 +112,39 @@ body {
 }
 
 .name {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
-  max-width: 200px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .coins {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
   color: gold;
 }
 
 .medal {
-  font-size: 28px;
+  font-size: 20px;
 }
 
 /* ======= VS ======= */
 #vs-container {
   width: 90%;
-  max-width: 700px;
-  text-align: center;
-  margin: 20px 0;
+  max-width: 500px;
 }
 
 .vs-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
-  border-radius: 16px;
-  background: rgba(0,0,0,0.85);
-  box-shadow: 0 0 30px rgba(255,87,34,0.8);
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.9);
   border: 2px solid #ff5722;
+  box-shadow: 0 0 15px #ff5722;
 }
 
 .vs-side {
@@ -156,23 +153,23 @@ body {
 }
 
 .vs-name {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 900;
   color: #fff;
-  text-shadow: 0 0 10px #fff;
+  text-shadow: 0 0 6px #fff;
 }
 
 .vs-coins {
-  font-size: 22px;
+  font-size: 18px;
   color: #ffd66b;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .flame {
-  font-size: 42px;
+  font-size: 32px;
   animation: flame 1s infinite alternate;
   color: orangered;
-  text-shadow: 0 0 20px #ff6600;
+  text-shadow: 0 0 15px #ff6600;
 }
 
 @keyframes flame {
@@ -188,29 +185,29 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background: rgba(0,0,0,1); /* Fondo negro completo */
+  background: rgba(0,0,0,1);
   z-index: 9999;
 }
 
 #winnerTitle {
-  font-size: 56px;
+  font-size: 48px;
   font-weight: 900;
-  text-shadow: 0 0 15px #fff, 0 0 40px #ff0, 0 0 60px #f90;
+  text-shadow: 0 0 15px #fff, 0 0 30px #ff0, 0 0 50px #f90;
   margin-bottom: 20px;
 }
 
 #winnerAvatar {
-  width: 250px;
-  height: 250px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  margin: 20px auto;
-  border: 8px solid gold;
-  box-shadow: 0 0 50px rgba(255,215,0,0.9);
+  margin: 15px auto;
+  border: 6px solid gold;
+  box-shadow: 0 0 40px rgba(255,215,0,0.9);
   overflow: hidden;
 }
 
 #winnerCoins {
-  font-size: 36px;
+  font-size: 28px;
   color: gold;
   animation: sparkle 1.5s infinite;
 }
