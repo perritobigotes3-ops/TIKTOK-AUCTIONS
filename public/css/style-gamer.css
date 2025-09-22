@@ -233,3 +233,12 @@ body {
   margin-top: 10px;
   text-shadow: 0 0 10px gold;
 }
+/* 🔥 Cuando no hay avatar */
+.emoji-flame {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+}
