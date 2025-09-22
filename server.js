@@ -197,7 +197,7 @@ async function connectTikTok() {
         const coins = data.diamondCount || data.repeatCount || 0;
         console.log(`💎 Donación en vivo: ${username} → ${coins}`);
 
-        // 🔥 Si no tiene foto, enviamos null
+        // 🔥 Si no tiene foto, enviamos null para que overlay muestre emoji
         let avatar = data.profilePictureUrl && data.profilePictureUrl.trim() !== ''
           ? data.profilePictureUrl
           : null;
