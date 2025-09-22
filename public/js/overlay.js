@@ -10,7 +10,6 @@ const vsLeft = document.getElementById('vs-left');
 const vsRight = document.getElementById('vs-right');
 const vsLeftCoins = document.getElementById('vs-left-coins');
 const vsRightCoins = document.getElementById('vs-right-coins');
-
 const winnerScreen = document.getElementById('winnerScreen');
 const winnerTitle = document.getElementById('winnerTitle');
 const winnerCoins = document.getElementById('winnerCoins');
@@ -26,8 +25,8 @@ function formatTime(sec) {
 
 function findAvatar(username, recent) {
   if (!recent) return null;
-  const f = recent.find(r => r.username === username);
-  return f ? f.avatar : null;
+  const found = recent.find(r => r.username === username);
+  return found ? found.avatar : null;
 }
 
 function renderTimer(state) {
@@ -38,8 +37,7 @@ function renderTimer(state) {
   } else {
     const t = state.timer.remaining ?? 0;
     timerEl.textContent = formatTime(t);
-    if (t <= 10) timerEl.classList.add('blink');
-    else timerEl.classList.remove('blink');
+    if (t <= 10) timerEl.classList.add('blink'); else timerEl.classList.remove('blink');
   }
 }
 
@@ -50,13 +48,17 @@ function renderRanking(participants, recentDonations) {
 
   sorted.forEach(([username, coins], idx) => {
     const avatar = findAvatar(username, recentDonations);
+
+    // 🔥 Mostrar imagen o emoji si no hay avatar
+    const avatarHtml = avatar
+      ? `<img src="${avatar}" alt="${username}">`
+      : `<div class="emoji-flame">🔥</div>`;
+
     const div = document.createElement('div');
     div.className = 'participant';
     div.innerHTML = `
       <div class="left">
-        <div class="avatar">
-          ${avatar ? `<img src="${avatar}" alt="${username}">` : `<div class="emoji-flame">🔥</div>`}
-        </div>
+        <div class="avatar">${avatarHtml}</div>
         <div class="name">${username}</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px">
