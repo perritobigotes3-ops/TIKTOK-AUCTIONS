@@ -210,6 +210,9 @@ body {
   border: 6px solid gold;
   box-shadow: 0 0 40px rgba(255,215,0,0.9);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #winnerAvatar img {
@@ -222,4 +225,14 @@ body {
   font-size: clamp(20px, 5vw, 32px);
   color: gold;
   animation: sparkle 1.5s infinite;
+}
+
+/* 🔥 Cuando no hay avatar */
+.emoji-flame {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
 }
