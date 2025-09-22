@@ -13,9 +13,10 @@ const vsRightCoins = document.getElementById('vs-right-coins');
 const winnerScreen = document.getElementById('winnerScreen');
 const winnerTitle = document.getElementById('winnerTitle');
 const winnerCoins = document.getElementById('winnerCoins');
-const winnerAvatarImg = document.querySelector('#winnerAvatar img');
+const winnerAvatarImg = document.getElementById('winnerAvatarImg');
+const winnerDefaultEmoji = document.getElementById('winnerDefaultEmoji');
 
-// ===== Funciones utilitarias =====
+// ===== Funciones =====
 function formatTime(sec) {
   if (sec < 0) sec = 0;
   const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -23,21 +24,16 @@ function formatTime(sec) {
   return `${m}:${s}`;
 }
 
-// Devuelve HTML: avatar o emoji 🔥 si no hay foto
+// Avatar o 🔥 si no hay foto
 function getAvatarHTML(username, recent) {
-  const defaultEmoji = `<div class="emoji-flame">🔥</div>`;
-
-  if (!recent || !Array.isArray(recent)) return defaultEmoji;
-
-  const found = recent.find(r => r.username === username);
+  const found = recent?.find(r => r.username === username);
   if (!found || !found.avatar || found.avatar.trim() === '') {
-    return defaultEmoji;
+    return `<div class="emoji-flame">🔥</div>`;
   }
-
   return `<img src="${found.avatar}" alt="${username}">`;
 }
 
-// ===== Renderizar contador =====
+// ===== Timer =====
 function renderTimer(state) {
   if (state.timer.inDelay) {
     const dr = state.timer.delayRemaining ?? state.timer.delay;
@@ -46,15 +42,12 @@ function renderTimer(state) {
   } else {
     const t = state.timer.remaining ?? 0;
     timerEl.textContent = formatTime(t);
-    if (t <= 10) {
-      timerEl.classList.add('blink');
-    } else {
-      timerEl.classList.remove('blink');
-    }
+    if (t <= 10) timerEl.classList.add('blink');
+    else timerEl.classList.remove('blink');
   }
 }
 
-// ===== Renderizar Ranking =====
+// ===== Ranking =====
 function renderRanking(participants, recentDonations) {
   rankingEl.innerHTML = '<div class="ranking-title">🏆 Top Donadores</div>';
 
@@ -66,10 +59,8 @@ function renderRanking(participants, recentDonations) {
 
   sorted.forEach(([username, coins], idx) => {
     const avatarHTML = getAvatarHTML(username, recentDonations);
-
     const div = document.createElement('div');
     div.className = 'participant';
-
     div.innerHTML = `
       <div class="left">
         <div class="avatar">${avatarHTML}</div>
@@ -84,7 +75,7 @@ function renderRanking(participants, recentDonations) {
   });
 }
 
-// ===== Renderizar VS =====
+// ===== VS =====
 function renderVS(participants) {
   const sorted = Object.entries(participants || {})
     .sort((a, b) => b[1] - a[1])
@@ -107,18 +98,17 @@ function renderVS(participants) {
   }
 }
 
-// ===== Pantalla de ganador =====
+// ===== Mostrar ganador =====
 function showWinner(username, coins, recent) {
-  const avatarHTML = getAvatarHTML(username, recent);
+  const found = recent?.find(r => r.username === username);
 
-  // Si es imagen, la asignamos
-  if (avatarHTML.includes('<img')) {
-    const temp = document.createElement('div');
-    temp.innerHTML = avatarHTML;
-    winnerAvatarImg.src = temp.querySelector('img').src;
+  if (!found || !found.avatar || found.avatar.trim() === '') {
+    winnerAvatarImg.style.display = 'none';
+    winnerDefaultEmoji.style.display = 'flex'; // muestra 🔥
   } else {
-    // Si no tiene avatar, mostramos 🔥
-    winnerAvatarImg.src = 'https://twemoji.maxcdn.com/v/latest/svg/1f525.svg';
+    winnerAvatarImg.src = found.avatar;
+    winnerAvatarImg.style.display = 'block';
+    winnerDefaultEmoji.style.display = 'none';
   }
 
   winnerTitle.textContent = `🎉 ¡Felicidades ${username}! 🎉`;
@@ -130,7 +120,7 @@ function showWinner(username, coins, recent) {
   }, 8000);
 }
 
-// ===== Eventos de Socket.io =====
+// ===== Socket.io =====
 socket.on('connect', () => console.log('Overlay conectado ✅'));
 socket.on('disconnect', () => console.log('Overlay desconectado ❌'));
 
@@ -151,7 +141,6 @@ socket.on('auctionEnd', (payload) => {
     const st = payload.state || payload;
     const sorted = Object.entries(st.participants || {}).sort((a, b) => b[1] - a[1]);
     if (!sorted.length) return;
-
     const [username, coins] = sorted[0];
     showWinner(username, coins, st.recentDonations);
   } catch (e) {
