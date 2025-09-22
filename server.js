@@ -1,169 +1,219 @@
+// server.js
 const express = require('express');
 const path = require('path');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const http = require('http');
+const socketIo = require('socket.io');
 const axios = require('axios');
+const { WebcastPushConnection } = require('tiktok-live-connector');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, { cors: { origin: "*" } });
 
 const PORT = process.env.PORT || 3000;
 
-// ===== Estado inicial =====
+// --- CONFIG ---
+const TIKTOK_USERNAME = "mykestradesbrainrots"; // <-- tu usuario sin @
+const TIKTOK_RETRY_MS = 30_000; // reintento si está offline
+
+// --- Estado global ---
 let state = {
-  participants: {},
-  recentDonations: [],
-  timer: { remaining: 60, delay: 10, inDelay: false },
-  theme: 'gamer'
+  participants: {},           // { username: coins }
+  recentDonations: [],       // [{username, coins, avatar}]
+  timer: { remaining: 60, delay: 10, inDelay: false, delayRemaining: null },
+  theme: 'gamer',
+  running: false
 };
 
-let overlayInfo = {
-  delayText: 'Delay 10 Segundos',
-  minimoText: 'Sin mínimo'
-};
+let overlayInfo = { delayText: 'Delay 10 Segundos', minimoText: 'Sin mínimo' };
+let history = []; // historial de subastas (objetos con timestamp, winner, total, participants)
 
 let interval = null;
 let delayInterval = null;
 
-// Servir carpeta "public"
+// Servir carpeta public (raíz: /css, /js, /assets, admin.html, overlay.html)
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-  res.send('Servidor Subasta Overlay activo 🚀');
-});
+app.get('/', (req, res) => res.send('Servidor Subasta Overlay activo 🚀'));
 
-// ===== Funciones =====
-
-// Obtener avatar TikTok
+// ---- Helpers ----
 async function getTikTokAvatar(username) {
   try {
     const url = `https://www.tiktok.com/@${username}`;
-    const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } , timeout: 8000});
     const match = data.match(/"avatarLarger":"(.*?)"/);
-    return match ? match[1].replace(/\u0026/g, '&') : '/assets/avatar-placeholder.png';
-  } catch {
+    return match ? match[1].replace(/\\u0026/g, '&') : '/assets/avatar-placeholder.png';
+  } catch (err) {
     return '/assets/avatar-placeholder.png';
   }
 }
 
-// Iniciar subasta
-function startAuction(duration, delay) {
+function emitState() {
+  io.emit('state', state);
+}
+
+function registerDonation(username, coins, avatar) {
+  // Bloquear donaciones si no se está corriendo la subasta
+  if (!state.running) {
+    console.log(`⏸ Donación ignorada (subasta no activa): ${username} → ${coins}`);
+    return;
+  }
+  if (!state.participants[username]) state.participants[username] = 0;
+  state.participants[username] += coins;
+
+  state.recentDonations.unshift({ username, coins, avatar });
+  if (state.recentDonations.length > 20) state.recentDonations.pop();
+
+  emitState();
+}
+
+// ---- Subasta ----
+function startAuction(duration = 60, delay = 10) {
   clearInterval(interval);
   clearInterval(delayInterval);
 
   state.timer.remaining = duration;
   state.timer.delay = delay;
+  state.timer.inDelay = false;
+  state.timer.delayRemaining = null;
   state.participants = {};
   state.recentDonations = [];
-  state.timer.inDelay = false;
+  state.running = true;
 
-  io.emit('state', state);
+  emitState();
 
   interval = setInterval(() => {
     state.timer.remaining--;
-
     if (state.timer.remaining <= 0) {
       clearInterval(interval);
       startDelay();
     }
-
-    io.emit('state', state);
+    emitState();
   }, 1000);
 
-  console.log(`⏳ Subasta iniciada: ${duration}s + ${delay}s de delay`);
+  console.log(`⏳ Subasta iniciada: ${duration}s + ${delay}s delay`);
 }
 
-// Delay antes de mostrar ganador
 function startDelay() {
   state.timer.inDelay = true;
-  let delayRemaining = state.timer.delay;
-
+  let remaining = state.timer.delay;
+  state.timer.delayRemaining = remaining;
   io.emit('enterDelay');
 
   delayInterval = setInterval(() => {
-    delayRemaining--;
-
-    if (delayRemaining <= 0) {
+    remaining--;
+    state.timer.delayRemaining = remaining;
+    if (remaining <= 0) {
       clearInterval(delayInterval);
       state.timer.inDelay = false;
+      state.timer.delayRemaining = null;
+      state.running = false;
       io.emit('delayEnd');
       endAuction();
+    } else {
+      emitState();
     }
-
-    io.emit('state', { ...state, timer: { ...state.timer, delayRemaining } });
   }, 1000);
+
+  emitState();
 }
 
-// Finalizar subasta
 function endAuction() {
-  io.emit('auctionEnd', state);
-  console.log('🏆 Subasta finalizada. Ganador enviado al overlay.');
+  // Calcular ganador
+  const sorted = Object.entries(state.participants).sort((a, b) => b[1] - a[1]);
+  const winner = sorted.length ? { username: sorted[0][0], coins: sorted[0][1] } : null;
+
+  // Guardar historial
+  const snapshot = {
+    ts: new Date().toISOString(),
+    winner,
+    participants: { ...state.participants }
+  };
+  history.unshift(snapshot);
+  if (history.length > 30) history.pop();
+
+  io.emit('auctionEnd', { state, winner });
+  emitState();
+  console.log('🏆 Subasta finalizada. Ganador enviado al overlay.', winner);
 }
 
-// Simulación de donación
-function simulateDonation(username, coins) {
-  console.log(`💰 Simulación recibida: ${username} donó ${coins} monedas`);
-
-  getTikTokAvatar(username).then(avatar => {
-    if (!state.participants[username]) state.participants[username] = 0;
-    state.participants[username] += coins;
-
-    state.recentDonations.push({ username, coins, avatar });
-    if (state.recentDonations.length > 10) state.recentDonations.shift();
-
-    io.emit('state', state);
-  });
+// ---- Simulación (panel) ----
+async function simulateDonation(username, coins) {
+  console.log(`💰 Simulación: ${username} → ${coins}`);
+  const avatar = await getTikTokAvatar(username);
+  registerDonation(username, coins, avatar);
 }
 
-// ===== WebSockets =====
+// ---- Socket.IO ----
 io.on('connection', (socket) => {
   console.log('Cliente conectado ✅');
+  // Enviar estado actual
   socket.emit('state', state);
-  socket.emit('updateInfo', overlayInfo); // enviar textos iniciales
+  socket.emit('updateInfo', overlayInfo);
+  socket.emit('history', history);
 
-  socket.on('admin:start', ({ duration, delay }) => {
-    console.log("📢 Iniciando subasta con duración:", duration, "delay:", delay);
-    startAuction(duration, delay);
-  });
-
+  // Admin events
+  socket.on('admin:start', ({ duration, delay }) => startAuction(duration, delay));
   socket.on('admin:stop', () => {
-    console.log("🛑 Subasta detenida manualmente");
-    clearInterval(interval);
-    clearInterval(delayInterval);
+    clearInterval(interval); clearInterval(delayInterval);
+    state.running = false;
     endAuction();
   });
-
-  socket.on('admin:simulate', ({ username, coins }) => {
-    simulateDonation(username, coins);
-  });
-
-  socket.on('admin:theme', (theme) => {
-    state.theme = theme;
-    io.emit('themeChange', theme);
-  });
-
-  // Recibir textos desde el panel admin
-  socket.on('admin:updateInfo', (data) => {
-    overlayInfo = data;
-    io.emit('updateInfo', overlayInfo);
-    console.log("ℹ️ Textos actualizados:", overlayInfo);
-  });
-
-  // Reiniciar subasta
   socket.on('admin:reset', () => {
-    clearInterval(interval);
-    clearInterval(delayInterval);
-
-    state = {
-      participants: {},
-      recentDonations: [],
-      timer: { remaining: 60, delay: 10, inDelay: false },
-      theme: state.theme
-    };
-
+    clearInterval(interval); clearInterval(delayInterval);
+    state = { participants: {}, recentDonations: [], timer: { remaining: 60, delay: 10, inDelay: false, delayRemaining: null }, theme: state.theme, running: false };
     io.emit('state', state);
-    console.log("🔄 Subasta reiniciada manualmente.");
+    console.log('🔄 Subasta reiniciada manualmente.');
   });
+  socket.on('admin:simulate', async ({ username, coins }) => simulateDonation(username, coins));
+  socket.on('admin:theme', (theme) => { state.theme = theme; io.emit('themeChange', theme); });
+  socket.on('admin:updateInfo', (data) => { overlayInfo = data; io.emit('updateInfo', overlayInfo); console.log('ℹ️ updateInfo', data); });
 });
 
-http.listen(PORT, () => {
-  console.log(`Servidor activo en puerto ${PORT}`);
-});
+// ---- TikTok Live Connector: conexión con reintentos ----
+let tiktokConn = null;
+async function connectTikTok() {
+  try {
+    if (tiktokConn) {
+      try { tiktokConn.disconnect(); } catch(e) {}
+      tiktokConn = null;
+    }
+    console.log(`🔌 Intentando conectar a TikTok Live @${TIKTOK_USERNAME} ...`);
+    tiktokConn = new WebcastPushConnection(TIKTOK_USERNAME);
+
+    await tiktokConn.connect();
+    console.log(`✅ Conectado a TikTok Live para @${TIKTOK_USERNAME}`);
+
+    tiktokConn.on('gift', async (data) => {
+      try {
+        const username = data.uniqueId || data.user_id || 'unknown';
+        const coins = data.diamondCount || data.repeatCount || 0;
+        console.log(`💎 Donación en vivo: ${username} → ${coins}`);
+        const avatar = await getTikTokAvatar(username);
+        registerDonation(username, coins, avatar);
+      } catch (err) {
+        console.error('Error manejando gift:', err);
+      }
+    });
+
+    tiktokConn.on('error', (err) => {
+      console.error('TikTok conn error:', err && err.message ? err.message : err);
+    });
+
+    tiktokConn.on('close', (reason) => {
+      console.log('TikTok connection closed:', reason);
+      // reintentar
+      setTimeout(connectTikTok, TIKTOK_RETRY_MS);
+    });
+
+  } catch (err) {
+    console.error('Error conectando a TikTok:', err && err.message ? err.message : err);
+    setTimeout(connectTikTok, TIKTOK_RETRY_MS);
+  }
+}
+
+// arrancar conexión pero tolerante: intenta conectar en background
+connectTikTok().catch(e => console.error('connectTikTok failed:', e));
+
+// ---- Start server ----
+server.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
