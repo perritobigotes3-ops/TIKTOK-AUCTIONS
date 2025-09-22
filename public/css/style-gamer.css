@@ -233,7 +233,7 @@ body {
   margin-top: 10px;
   text-shadow: 0 0 10px gold;
 }
-/* 🔥 Cuando no hay avatar */
+/* 🔥 Avatar vacío con emoji */
 .emoji-flame {
   font-size: 30px;
   display: flex;
@@ -241,4 +241,5 @@ body {
   justify-content: center;
   width: 45px;
   height: 45px;
+  color: orange;
 }
