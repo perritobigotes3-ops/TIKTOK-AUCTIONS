@@ -113,6 +113,15 @@ body {
   object-fit: cover;
 }
 
+.emoji-flame {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+}
+
 .name {
   font-size: clamp(14px, 4vw, 20px);
   font-weight: bold;
@@ -210,9 +219,6 @@ body {
   border: 6px solid gold;
   box-shadow: 0 0 40px rgba(255,215,0,0.9);
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 #winnerAvatar img {
@@ -222,17 +228,8 @@ body {
 }
 
 #winnerCoins {
-  font-size: clamp(20px, 5vw, 32px);
+  font-size: clamp(18px, 5vw, 28px);
   color: gold;
-  animation: sparkle 1.5s infinite;
-}
-
-/* 🔥 Cuando no hay avatar */
-.emoji-flame {
-  font-size: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 45px;
-  height: 45px;
+  margin-top: 10px;
+  text-shadow: 0 0 10px gold;
 }
