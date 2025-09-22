@@ -1,25 +1,24 @@
-const socket = io(); // Conectar con el servidor
+const socket = io();
 
-// ===== Diagnóstico de conexión =====
-socket.on('connect', () => console.log('Admin conectado ✅'));
-socket.on('disconnect', () => console.log('Admin desconectado ❌'));
-
-// ===== Elementos del panel =====
+// Elementos principales
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
-const resetBtn = document.getElementById('resetBtn');
 const simulateBtn = document.getElementById('simulateBtn');
 
 const durationInput = document.getElementById('duration');
 const delayInput = document.getElementById('delay');
 const themeSelect = document.getElementById('theme');
 
+// Campos para simular donación
 const simNameInput = document.getElementById('simName');
 const simCoinsInput = document.getElementById('simCoins');
 
-const historyEl = document.getElementById('history');
+// Campos para texto informativo
+const snipeTextInput = document.getElementById('snipeText');
+const minTextInput = document.getElementById('minText');
+const updateInfoBtn = document.getElementById('updateInfoBtn');
 
-// ===== Botones principales =====
+// === Eventos principales ===
 
 // Iniciar subasta
 startBtn.addEventListener('click', () => {
@@ -27,54 +26,47 @@ startBtn.addEventListener('click', () => {
   const delay = parseInt(delayInput.value) || 10;
 
   socket.emit('admin:start', { duration, delay });
-  alert(`🚀 Subasta iniciada por ${duration}s + ${delay}s de delay.`);
+  alert(`Subasta iniciada por ${duration} segundos + ${delay} de delay.`);
 });
 
 // Detener subasta
 stopBtn.addEventListener('click', () => {
   socket.emit('admin:stop');
-  alert('🛑 Subasta detenida manualmente.');
+  alert('Subasta detenida manualmente.');
 });
 
-// Reiniciar subasta
-resetBtn.addEventListener('click', () => {
-  socket.emit('admin:reset');
-  alert('🔄 Subasta reiniciada y ranking limpio.');
-  historyEl.innerHTML = ''; // Limpia historial visual
-});
-
-// ===== Simulación de donación =====
+// Simular donación
 simulateBtn.addEventListener('click', () => {
   const username = simNameInput.value.trim();
-  const coins = parseInt(simCoinsInput.value) || 10;
+  const coins = parseInt(simCoinsInput.value);
 
-  if (!username) {
-    alert('Debes ingresar un nombre de usuario para simular.');
+  if (!username || isNaN(coins) || coins <= 0) {
+    alert('Ingresa un nombre válido y una cantidad de monedas.');
     return;
   }
 
   socket.emit('admin:simulate', { username, coins });
-  alert(`💸 Simulación enviada: ${username} donó ${coins} monedas.`);
+  alert(`Donación simulada: ${username} → ${coins} monedas`);
 });
 
-// ===== Cambiar tema del overlay =====
+// Actualizar texto informativo
+updateInfoBtn.addEventListener('click', () => {
+  const info = {
+    snipe: snipeTextInput.value || '',
+    min: minTextInput.value || ''
+  };
+
+  socket.emit('admin:updateInfo', info);
+  alert('Texto informativo actualizado ✅');
+});
+
+// Cambiar tema
 themeSelect.addEventListener('change', () => {
   const theme = themeSelect.value;
   socket.emit('admin:theme', theme);
-  alert(`🎨 Tema cambiado a: ${theme}`);
+  alert(`Tema cambiado a: ${theme}`);
 });
 
-// ===== Historial de subastas =====
-socket.on('auctionEnd', (state) => {
-  const sorted = Object.entries(state.participants || {}).sort((a, b) => b[1] - a[1]);
-  if (sorted.length === 0) return;
-
-  const [winner, coins] = sorted[0];
-  const time = new Date().toLocaleTimeString();
-
-  const div = document.createElement('div');
-  div.className = 'history-item';
-  div.textContent = `${time} - Ganador: ${winner} (${coins} 💰)`;
-
-  historyEl.prepend(div);
-});
+// === Eventos desde el servidor ===
+socket.on('connect', () => console.log('Panel conectado ✅'));
+socket.on('disconnect', () => console.log('Panel desconectado ❌'));
