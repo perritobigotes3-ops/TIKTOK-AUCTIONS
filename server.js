@@ -14,12 +14,12 @@ const PORT = process.env.PORT || 3000;
 
 // --- CONFIG ---
 const TIKTOK_USERNAME = "mykestradesbrainrots"; // Usuario sin @
-const TIKTOK_RETRY_MS = 30_000; // Tiempo para reconectar a TikTok
+const TIKTOK_RETRY_MS = 30_000;
 
 // --- Estado global ---
 let state = {
   participants: {},
-  recentDonations: [], // [{username, coins, avatar}]
+  recentDonations: [],
   timer: { remaining: 60, delay: 10, inDelay: false, delayRemaining: null },
   theme: 'gamer',
   running: false
@@ -31,9 +31,9 @@ let history = [];
 let interval = null;
 let delayInterval = null;
 
-// --- Cache de gifts para evitar duplicados ---
+// --- Anti duplicado ---
 const recentGifts = new Map();
-const GIFT_COOLDOWN_MS = 1500; // 1.5s ventana anti-duplicado
+const GIFT_COOLDOWN_MS = 800; // 0.8s
 
 // --- Servir carpeta public ---
 app.use(express.static(path.join(__dirname, 'public')));
@@ -48,7 +48,7 @@ async function getTikTokAvatar(username) {
       timeout: 8000
     });
     const match = data.match(/"avatarLarger":"(.*?)"/);
-    return match ? match[1].replace(/\\u0026/g, '&') : null; // null si no tiene foto
+    return match ? match[1].replace(/\\u0026/g, '&') : null;
   } catch (err) {
     return null;
   }
@@ -141,7 +141,7 @@ function endAuction() {
   console.log('🏆 Subasta finalizada. Ganador enviado al overlay.', winner);
 }
 
-// ---- Simulación (panel) ----
+// ---- Simulación ----
 async function simulateDonation(username, coins) {
   console.log(`💰 Simulación: ${username} → ${coins}`);
   const avatar = await getTikTokAvatar(username);
@@ -198,7 +198,7 @@ async function connectTikTok() {
 
     tiktokConn.on('gift', async (data) => {
       try {
-        // 1️⃣ Ignorar eventos repeatEnd
+        // 🔹 Ignorar evento finalizador de combo
         if (data.repeatEnd) {
           console.log(`⏩ Evento repeatEnd ignorado para ${data.uniqueId}`);
           return;
@@ -207,21 +207,14 @@ async function connectTikTok() {
         const username = data.uniqueId || data.user_id || 'unknown';
         const coins = data.diamondCount || 0;
 
-        // 2️⃣ Detectar eventos totalizadores (doble conteo)
-        if (coins > 1 && data.repeatCount > 1) {
-          console.log(`⚠️ Evento totalizador ignorado: ${username} → ${coins}`);
-          return;
-        }
-
-        // 3️⃣ Anti-duplicado
-        const giftKey = `${username}-${data.giftId}-${coins}`;
+        // 🔹 Anti-duplicado usando timestamp exacto
+        const giftKey = `${username}-${data.giftId}-${coins}-${data.timestamp}`;
         const now = Date.now();
 
         if (recentGifts.has(giftKey) && now - recentGifts.get(giftKey) < GIFT_COOLDOWN_MS) {
           console.log(`⚠️ Donación duplicada ignorada: ${giftKey}`);
           return;
         }
-
         recentGifts.set(giftKey, now);
 
         console.log(`💎 Donación procesada: ${username} → ${coins}`);
@@ -237,7 +230,7 @@ async function connectTikTok() {
     });
 
     tiktokConn.on('error', (err) => {
-      console.error('TikTok conn error:', err && err.message ? err.message : err);
+      console.error('TikTok conn error:', err?.message || err);
     });
 
     tiktokConn.on('close', (reason) => {
@@ -246,7 +239,7 @@ async function connectTikTok() {
     });
 
   } catch (err) {
-    console.error('Error conectando a TikTok:', err && err.message ? err.message : err);
+    console.error('Error conectando a TikTok:', err?.message || err);
     setTimeout(connectTikTok, TIKTOK_RETRY_MS);
   }
 }
