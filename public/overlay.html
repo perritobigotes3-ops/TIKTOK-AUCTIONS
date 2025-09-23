@@ -3,27 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Overlay Subasta Pro</title>
-  <!-- Ruta corregida -->
+  <title>Overlay Subasta</title>
   <link rel="stylesheet" href="/css/style-gamer.css">
 </head>
 <body>
   <div id="overlay-container">
-    <!-- Barra de información -->
     <div id="info-bar">
       <div id="info-delay">⚡ Delay 10 Segundos</div>
       <div id="info-minimo">💰 Sin mínimo</div>
     </div>
 
-    <!-- Contador -->
     <div id="auction-timer-container">
       <div id="auction-timer">00:00</div>
     </div>
 
-    <!-- Ranking -->
     <div id="ranking"></div>
 
-    <!-- VS Dinámico -->
     <div id="vs-container">
       <div class="vs-box">
         <div class="vs-side">
@@ -39,10 +34,8 @@
     </div>
   </div>
 
-  <!-- Pantalla del ganador -->
   <div id="winnerScreen">
     <div id="winnerAvatar">
-      <!-- 🔥 Este div se muestra cuando NO hay foto -->
       <div class="emoji-flame" id="winnerDefaultEmoji" style="display:none;">🔥</div>
       <img id="winnerAvatarImg" src="" alt="Ganador">
     </div>
@@ -51,7 +44,6 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <!-- Ruta corregida -->
   <script src="/js/overlay.js"></script>
 </body>
 </html>
