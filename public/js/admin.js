@@ -1,10 +1,8 @@
-// public/js/admin.js
-const socket = io.connect(window.SOCKET_IO_ORIGIN || window.location.origin);
+const socket = io.connect(window.location.origin, { transports: ['websocket'] });
 
 // elementos
 const durationInput = document.getElementById('duration');
 const delayInput = document.getElementById('delay');
-const themeSelect = document.getElementById('theme');
 const infoDelayInput = document.getElementById('infoDelay');
 const infoMinimoInput = document.getElementById('infoMinimo');
 
@@ -36,19 +34,23 @@ simulateBtn.addEventListener('click', () => {
   if (username && coins > 0) socket.emit('admin:simulate', { username, coins });
 });
 
-themeSelect.addEventListener('change', (e) => socket.emit('admin:theme', e.target.value));
-
-// enviar textos informativos en tiempo real
+// enviar textos informativos
 function sendInfo() {
-  socket.emit('admin:updateInfo', { delayText: infoDelayInput.value, minimoText: infoMinimoInput.value });
+  socket.emit('admin:updateInfo', {
+    delayText: infoDelayInput.value,
+    minimoText: infoMinimoInput.value
+  });
 }
 infoDelayInput.addEventListener('input', sendInfo);
 infoMinimoInput.addEventListener('input', sendInfo);
 
-// recibir historial
+// historial
 socket.on('history', (h) => {
   historyEl.innerHTML = '';
-  if (!h || !h.length) { historyEl.innerHTML = '<div style="color:#777">No hay historial</div>'; return; }
+  if (!h || !h.length) {
+    historyEl.innerHTML = '<div style="color:#777">No hay historial</div>';
+    return;
+  }
   h.forEach(it => {
     const winner = it.winner ? `${it.winner.username} (${it.winner.coins}💰)` : '—';
     const div = document.createElement('div');
@@ -59,13 +61,9 @@ socket.on('history', (h) => {
   });
 });
 
-// recibir updateInfo inicial
+// update inicial
 socket.on('updateInfo', (d) => {
   if (!d) return;
   infoDelayInput.value = d.delayText || '';
   infoMinimoInput.value = d.minimoText || '';
 });
-
-// logs
-socket.on('connect', ()=> console.log('Admin conectado ✅'));
-socket.on('disconnect', ()=> console.log('Admin desconectado ❌'));
