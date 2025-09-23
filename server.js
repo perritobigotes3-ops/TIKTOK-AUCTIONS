@@ -1,4 +1,6 @@
-// server.js
+// ==========================
+//  server.js Final Optimizado
+// ==========================
 const express = require('express');
 const path = require('path');
 const http = require('http');
@@ -12,37 +14,44 @@ const io = socketIo(server, { cors: { origin: "*" } });
 
 const PORT = process.env.PORT || 3000;
 
-// --- CONFIG ---
-const TIKTOK_USERNAME = "mykestradesbrainrots"; // <-- tu usuario de TikTok sin @
-const TIKTOK_RETRY_MS = 30_000; // Reintentar cada 30s si el live está apagado
+// --- CONFIGURACIÓN PRINCIPAL ---
+const TIKTOK_USERNAME = "mykestradesbrainrots"; // <-- tu usuario sin @
+const TIKTOK_RETRY_MS = 30_000; // tiempo de reintento si el live se cierra
 
-// --- Estado global ---
+// --- ESTADO GLOBAL ---
 let state = {
-  participants: {},           // { username: coins }
-  recentDonations: [],        // [{ username, coins, avatar }]
+  participants: {}, // { username: coins }
+  recentDonations: [], // [{username, coins, avatar}]
   timer: { remaining: 60, delay: 10, inDelay: false, delayRemaining: null },
   theme: 'gamer',
   running: false
 };
 
 let overlayInfo = { delayText: 'Delay 10 Segundos', minimoText: 'Sin mínimo' };
-let history = []; // historial de subastas
+let history = [];
 
 let interval = null;
 let delayInterval = null;
 
-// Servir carpeta public (CSS, JS, imágenes, admin.html, overlay.html)
+// ==============================
+// Servir archivos estáticos
+// ==============================
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.send('Servidor Subasta Overlay activo 🚀'));
 
-// ---- Helpers ----
+// ==============================
+// Helpers
+// ==============================
 async function getTikTokAvatar(username) {
   try {
     const url = `https://www.tiktok.com/@${username}`;
-    const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
+    const { data } = await axios.get(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      timeout: 8000
+    });
     const match = data.match(/"avatarLarger":"(.*?)"/);
-    return match ? match[1].replace(/\\u0026/g, '&') : null; // null = sin foto
-  } catch (err) {
+    return match ? match[1].replace(/\\u0026/g, '&') : null; // null si no hay avatar
+  } catch {
     return null;
   }
 }
@@ -51,6 +60,7 @@ function emitState() {
   io.emit('state', state);
 }
 
+// Registrar donación
 function registerDonation(username, coins, avatar) {
   if (!state.running) {
     console.log(`⏸ Donación ignorada (subasta no activa): ${username} → ${coins}`);
@@ -66,7 +76,9 @@ function registerDonation(username, coins, avatar) {
   emitState();
 }
 
-// ---- Subasta ----
+// ==============================
+// SUBASTA
+// ==============================
 function startAuction(duration = 60, delay = 10) {
   clearInterval(interval);
   clearInterval(delayInterval);
@@ -134,16 +146,21 @@ function endAuction() {
   console.log('🏆 Subasta finalizada. Ganador enviado al overlay.', winner);
 }
 
-// ---- Simulación desde panel ----
+// ==============================
+// Simulación desde panel admin
+// ==============================
 async function simulateDonation(username, coins) {
   console.log(`💰 Simulación: ${username} → ${coins}`);
   const avatar = await getTikTokAvatar(username);
-  registerDonation(username, coins, avatar || null);
+  registerDonation(username, coins, avatar || null); // null -> emoji 🔥
 }
 
-// ---- Socket.IO ----
+// ==============================
+// Socket.IO
+// ==============================
 io.on('connection', (socket) => {
   console.log('Cliente conectado ✅');
+
   socket.emit('state', state);
   socket.emit('updateInfo', overlayInfo);
   socket.emit('history', history);
@@ -177,7 +194,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// ---- TikTok Live Connector ----
+// ==============================
+// TikTok Live Connector
+// ==============================
 let tiktokConn = null;
 async function connectTikTok() {
   try {
@@ -185,26 +204,26 @@ async function connectTikTok() {
       try { tiktokConn.disconnect(); } catch (e) {}
       tiktokConn = null;
     }
+
     console.log(`🔌 Intentando conectar a TikTok Live @${TIKTOK_USERNAME} ...`);
-    tiktokConn = new WebcastPushConnection(TIKTOK_USERNAME);
+
+    // ✅ Modo tiempo real: cuenta cada moneda sin duplicados
+    tiktokConn = new WebcastPushConnection(TIKTOK_USERNAME, {
+      process_gift_on_each_send: true
+    });
 
     await tiktokConn.connect();
     console.log(`✅ Conectado a TikTok Live para @${TIKTOK_USERNAME}`);
 
-    // 🔥 Donaciones en vivo
+    // Evento de donación
     tiktokConn.on('gift', async (data) => {
       try {
         const username = data.uniqueId || data.user_id || 'unknown';
+        const coins = data.diamondCount || data.repeatCount || 0;
 
-        // Evitar contar doble los regalos repetidos
-        if (data.repeatEnd === false) {
-          return; // ⛔ Ignora mientras la animación sigue
-        }
+        console.log(`💎 Donación en vivo: ${username} → ${coins}`);
 
-        const coins = data.diamondCount || 0;
-        console.log(`💎 Donación final confirmada: ${username} → ${coins}`);
-
-        // Si no tiene avatar, se envía null para mostrar el emoji 🔥
+        // Si no hay foto, usamos null para mostrar emoji 🔥
         let avatar = data.profilePictureUrl && data.profilePictureUrl.trim() !== ''
           ? data.profilePictureUrl
           : null;
@@ -219,7 +238,7 @@ async function connectTikTok() {
       }
     });
 
-    // Manejo de errores y reconexión
+    // Manejo de errores y reconexiones
     tiktokConn.on('error', (err) => {
       console.error('TikTok conn error:', err && err.message ? err.message : err);
     });
@@ -235,8 +254,10 @@ async function connectTikTok() {
   }
 }
 
-// Arrancar conexión
+// Iniciar conexión automática
 connectTikTok().catch(e => console.error('connectTikTok failed:', e));
 
-// ---- Iniciar servidor ----
+// ==============================
+// Start server
+// ==============================
 server.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
