@@ -1,11 +1,10 @@
-const socket = io.connect(window.location.origin, { transports: ['websocket'] });
+const socket = io();
 
-// elementos
+// Elementos
 const durationInput = document.getElementById('duration');
 const delayInput = document.getElementById('delay');
 const infoDelayInput = document.getElementById('infoDelay');
 const infoMinimoInput = document.getElementById('infoMinimo');
-
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
@@ -14,27 +13,28 @@ const simNameInput = document.getElementById('simName');
 const simCoinsInput = document.getElementById('simCoins');
 const historyEl = document.getElementById('history');
 
+// Iniciar subasta
 startBtn.addEventListener('click', () => {
-  const duration = parseInt(durationInput.value) || 60;
-  const delay = parseInt(delayInput.value) || 10;
-  socket.emit('admin:start', { duration, delay });
+  socket.emit('admin:start', {
+    duration: parseInt(durationInput.value) || 60,
+    delay: parseInt(delayInput.value) || 10
+  });
 });
 
-stopBtn.addEventListener('click', () => {
-  socket.emit('admin:stop');
-});
+// Detener
+stopBtn.addEventListener('click', () => socket.emit('admin:stop'));
 
-resetBtn.addEventListener('click', () => {
-  socket.emit('admin:reset');
-});
+// Reiniciar
+resetBtn.addEventListener('click', () => socket.emit('admin:reset'));
 
+// Simular donación
 simulateBtn.addEventListener('click', () => {
-  const username = simNameInput.value || prompt('Nombre simulación','Invitado');
-  const coins = parseInt(simCoinsInput.value) || parseInt(prompt('Monedas','10'));
-  if (username && coins > 0) socket.emit('admin:simulate', { username, coins });
+  const username = simNameInput.value || 'Invitado';
+  const coins = parseInt(simCoinsInput.value) || 1;
+  socket.emit('admin:simulate', { username, coins });
 });
 
-// enviar textos informativos
+// Enviar información del overlay
 function sendInfo() {
   socket.emit('admin:updateInfo', {
     delayText: infoDelayInput.value,
@@ -44,7 +44,7 @@ function sendInfo() {
 infoDelayInput.addEventListener('input', sendInfo);
 infoMinimoInput.addEventListener('input', sendInfo);
 
-// historial
+// Historial
 socket.on('history', (h) => {
   historyEl.innerHTML = '';
   if (!h || !h.length) {
@@ -54,16 +54,11 @@ socket.on('history', (h) => {
   h.forEach(it => {
     const winner = it.winner ? `${it.winner.username} (${it.winner.coins}💰)` : '—';
     const div = document.createElement('div');
-    div.style.borderBottom = '1px solid #222';
-    div.style.padding = '6px 4px';
-    div.innerHTML = `<strong>${(new Date(it.ts)).toLocaleString()}</strong><div style="color:#ccc">Ganador: ${winner}</div>`;
+    div.className = 'history-item';
+    div.innerHTML = `<strong>${(new Date(it.ts)).toLocaleString()}</strong> <br> Ganador: ${winner}`;
     historyEl.appendChild(div);
   });
 });
 
-// update inicial
-socket.on('updateInfo', (d) => {
-  if (!d) return;
-  infoDelayInput.value = d.delayText || '';
-  infoMinimoInput.value = d.minimoText || '';
-});
+socket.on('connect', () => console.log('Admin conectado ✅'));
+socket.on('disconnect', () => console.log('Admin desconectado ❌'));
