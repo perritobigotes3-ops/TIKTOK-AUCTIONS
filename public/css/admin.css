@@ -1,109 +1,64 @@
-/* Estilos generales */
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f0f2f5;
-  margin: 0;
-  padding: 0;
-  color: #333;
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Subastas</title>
+  <!-- ✅ Solo CSS del panel -->
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Panel de Control - Subastas TikTok</h1>
 
-.container {
-  max-width: 900px;
-  margin: 30px auto;
-  background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
+    <!-- Configuración de tiempos -->
+    <h2>Configuración</h2>
+    <label for="duration">Duración (segundos)</label>
+    <input type="number" id="duration" value="60">
 
-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
+    <label for="delay">Delay (segundos)</label>
+    <input type="number" id="delay" value="10">
 
-header h1 {
-  color: #444;
-  font-size: 1.8em;
-}
+    <label for="theme">Tema del Overlay</label>
+    <select id="theme">
+      <option value="gamer">Gamer</option>
+      <option value="base">Base</option>
+    </select>
 
-section {
-  margin-bottom: 25px;
-}
+    <!-- Textos informativos -->
+    <h2>Textos de Información</h2>
+    <label for="infoDelay">Texto Delay</label>
+    <input type="text" id="infoDelay" value="⚡ Delay 10 Segundos">
 
-h2 {
-  font-size: 1.3em;
-  color: #222;
-  margin-bottom: 10px;
-}
+    <label for="infoMinimo">Texto Mínimo</label>
+    <input type="text" id="infoMinimo" value="💰 Sin mínimo">
 
-.form-group {
-  margin-bottom: 12px;
-}
+    <!-- Botones principales -->
+    <div class="buttons">
+      <button id="startBtn" class="btn btn-green">Iniciar Subasta</button>
+      <button id="stopBtn" class="btn btn-red">Finalizar</button>
+      <button id="resetBtn" class="btn btn-gray">Reiniciar</button>
+    </div>
 
-.form-inline {
-  display: flex;
-  gap: 10px;
-}
+    <!-- Simulación -->
+    <h2>Simulación de Donaciones</h2>
+    <label for="simName">Nombre</label>
+    <input type="text" id="simName" placeholder="Ejemplo: Invitado">
 
-input[type="text"],
-input[type="number"] {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-}
+    <label for="simCoins">Monedas</label>
+    <input type="number" id="simCoins" placeholder="Ejemplo: 10">
 
-.buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
+    <button id="simulateBtn" class="btn btn-blue">Simular Donación</button>
 
-/* Botones */
-.btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
+    <!-- Historial -->
+    <h2>Historial</h2>
+    <div id="history" class="history-box">
+      <div style="color:#777;">No hay historial</div>
+    </div>
+  </div>
 
-.btn.primary {
-  background: #007bff;
-  color: white;
-}
-
-.btn.primary:hover {
-  background: #0056b3;
-}
-
-.btn.danger {
-  background: #ff4d4d;
-  color: white;
-}
-
-.btn.danger:hover {
-  background: #cc0000;
-}
-
-.simulate-btn {
-  background: #28a745;
-  color: white;
-}
-
-.simulate-btn:hover {
-  background: #1e7e34;
-}
-
-/* Historial */
-.history-box {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  min-height: 80px;
-  max-height: 300px;
-  overflow-y: auto;
-}
+  <!-- ✅ Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
