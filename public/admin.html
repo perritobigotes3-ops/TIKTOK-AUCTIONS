@@ -2,60 +2,41 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Subastas</title>
-  <link rel="stylesheet" href="/css/admin.css">
-  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="/css/style-admin.css">
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>⚙️ Panel de Subastas</h1>
-    </header>
+    <h1>⚙️ Panel de Subastas</h1>
 
-    <section class="config">
-      <h2>Configuración</h2>
-      <div class="form-group">
-        <label>Duración (segundos):</label>
-        <input type="number" id="duration" value="60">
-      </div>
-      <div class="form-group">
-        <label>Delay final (segundos):</label>
-        <input type="number" id="delay" value="10">
-      </div>
-      <div class="buttons">
-        <button id="startBtn" class="btn primary">Iniciar Subasta</button>
-        <button id="stopBtn" class="btn danger">Detener</button>
-        <button id="resetBtn" class="btn">Reiniciar</button>
-      </div>
-    </section>
+    <h2>Configuración</h2>
+    <label>Duración (segundos):</label>
+    <input type="number" id="duration" value="60">
+    <label>Delay final (segundos):</label>
+    <input type="number" id="delay" value="10">
+    <div class="buttons">
+      <button id="startBtn" class="btn btn-blue">Iniciar Subasta</button>
+      <button id="stopBtn" class="btn btn-red">Detener</button>
+      <button id="resetBtn" class="btn btn-gray">Reiniciar</button>
+    </div>
 
-    <section class="overlay-info">
-      <h2>Información del Overlay</h2>
-      <div class="form-group">
-        <label>Texto Delay:</label>
-        <input type="text" id="infoDelay" placeholder="⚡ Delay 10 Segundos">
-      </div>
-      <div class="form-group">
-        <label>Texto Mínimo:</label>
-        <input type="text" id="infoMinimo" placeholder="💰 Sin mínimo">
-      </div>
-    </section>
+    <h2>Información del Overlay</h2>
+    <label>Texto Delay:</label>
+    <input type="text" id="infoDelay" placeholder="⚡ Delay 10 Segundos">
+    <label>Texto Mínimo:</label>
+    <input type="text" id="infoMinimo" placeholder="💰 Sin mínimo">
 
-    <section class="simulate">
-      <h2>Simular Donación</h2>
-      <div class="form-inline">
-        <input type="text" id="simName" placeholder="Usuario">
-        <input type="number" id="simCoins" placeholder="Monedas">
-        <button id="simulateBtn" class="btn simulate-btn">Simular</button>
-      </div>
-    </section>
+    <h2>Simular Donación</h2>
+    <input type="text" id="simName" placeholder="Usuario">
+    <input type="number" id="simCoins" placeholder="Monedas">
+    <button id="simulateBtn" class="btn btn-green">Simular</button>
 
-    <section class="history">
-      <h2>Historial</h2>
-      <div id="history" class="history-box">Cargando...</div>
-    </section>
+    <h2>Historial</h2>
+    <div id="history" class="history-box">No hay historial</div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>
