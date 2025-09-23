@@ -1,64 +1,66 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Subastas</title>
-  <!-- ✅ Solo CSS del panel -->
-  <link rel="stylesheet" href="/css/admin.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Panel de Control - Subastas TikTok</h1>
+body {
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+}
 
-    <!-- Configuración de tiempos -->
-    <h2>Configuración</h2>
-    <label for="duration">Duración (segundos)</label>
-    <input type="number" id="duration" value="60">
+.admin-container {
+  max-width: 800px;
+  margin: auto;
+  background: #1f1f1f;
+  padding: 20px;
+  border-radius: 10px;
+}
 
-    <label for="delay">Delay (segundos)</label>
-    <input type="number" id="delay" value="10">
+h1, h2 {
+  text-align: center;
+  color: #ffcc00;
+}
 
-    <label for="theme">Tema del Overlay</label>
-    <select id="theme">
-      <option value="gamer">Gamer</option>
-      <option value="base">Base</option>
-    </select>
+.controls, .simulate, .info-section {
+  margin-bottom: 20px;
+}
 
-    <!-- Textos informativos -->
-    <h2>Textos de Información</h2>
-    <label for="infoDelay">Texto Delay</label>
-    <input type="text" id="infoDelay" value="⚡ Delay 10 Segundos">
+label {
+  display: block;
+  margin-top: 10px;
+  color: #ddd;
+}
 
-    <label for="infoMinimo">Texto Mínimo</label>
-    <input type="text" id="infoMinimo" value="💰 Sin mínimo">
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 5px;
+}
 
-    <!-- Botones principales -->
-    <div class="buttons">
-      <button id="startBtn" class="btn btn-green">Iniciar Subasta</button>
-      <button id="stopBtn" class="btn btn-red">Finalizar</button>
-      <button id="resetBtn" class="btn btn-gray">Reiniciar</button>
-    </div>
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 10px 5px 0 0;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  color: white;
+}
 
-    <!-- Simulación -->
-    <h2>Simulación de Donaciones</h2>
-    <label for="simName">Nombre</label>
-    <input type="text" id="simName" placeholder="Ejemplo: Invitado">
+.btn.start { background: green; }
+.btn.stop { background: red; }
+.btn.reset { background: orange; }
+.btn.simulate { background: #007bff; }
 
-    <label for="simCoins">Monedas</label>
-    <input type="number" id="simCoins" placeholder="Ejemplo: 10">
+.history {
+  background: #222;
+  padding: 10px;
+  border-radius: 8px;
+}
 
-    <button id="simulateBtn" class="btn btn-blue">Simular Donación</button>
-
-    <!-- Historial -->
-    <h2>Historial</h2>
-    <div id="history" class="history-box">
-      <div style="color:#777;">No hay historial</div>
-    </div>
-  </div>
-
-  <!-- ✅ Scripts -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/admin.js"></script>
-</body>
-</html>
+.history-item {
+  border-bottom: 1px solid #444;
+  padding: 5px 0;
+}
