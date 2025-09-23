@@ -10,16 +10,16 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
 // --- CONFIG ---
-const TIKTOK_USERNAME = "mykestradesbrainrots"; // Tu usuario sin @
-const TIKTOK_RETRY_MS = 30_000; // Reintento si está offline
+const TIKTOK_USERNAME = "mykestradesbrainrots"; // <-- tu usuario de TikTok sin @
+const TIKTOK_RETRY_MS = 30000; // 30 segundos para reintentar conexión
 
 // --- Estado global ---
 let state = {
   participants: {},
-  recentDonations: [],
+  recentDonations: [], // [{username, coins, avatar}]
   timer: { remaining: 60, delay: 10, inDelay: false, delayRemaining: null },
   theme: 'gamer',
   running: false
@@ -27,25 +27,38 @@ let state = {
 
 let overlayInfo = { delayText: 'Delay 10 Segundos', minimoText: 'Sin mínimo' };
 let history = [];
+
 let interval = null;
 let delayInterval = null;
 
-// === Rutas para Render ===
+// ================================
+// SERVIR ARCHIVOS ESTÁTICOS
+// ================================
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/overlay', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'overlay.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
+// Página principal
 app.get('/', (req, res) => {
   res.send('Servidor Subasta Overlay activo 🚀');
 });
 
-// === Helper: obtener avatar ===
+// Ruta para el panel de administración
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Ruta para el overlay
+app.get('/overlay', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'overlay.html'));
+});
+
+// Ruta para manejar 404
+app.use((req, res) => {
+  res.status(404).send('404 - Página no encontrada ❌');
+});
+
+// ================================
+// FUNCIONES DE UTILIDAD
+// ================================
 async function getTikTokAvatar(username) {
   try {
     const url = `https://www.tiktok.com/@${username}`;
@@ -55,8 +68,8 @@ async function getTikTokAvatar(username) {
     });
     const match = data.match(/"avatarLarger":"(.*?)"/);
     return match ? match[1].replace(/\\u0026/g, '&') : null;
-  } catch {
-    return null;
+  } catch (err) {
+    return null; // Sin avatar
   }
 }
 
@@ -64,6 +77,9 @@ function emitState() {
   io.emit('state', state);
 }
 
+// ================================
+// REGISTRO DE DONACIONES
+// ================================
 function registerDonation(username, coins, avatar) {
   if (!state.running) {
     console.log(`⏸ Donación ignorada (subasta no activa): ${username} → ${coins}`);
@@ -79,7 +95,9 @@ function registerDonation(username, coins, avatar) {
   emitState();
 }
 
-// === Subasta ===
+// ================================
+// SUBASTA
+// ================================
 function startAuction(duration = 60, delay = 10) {
   clearInterval(interval);
   clearInterval(delayInterval);
@@ -147,23 +165,28 @@ function endAuction() {
   console.log('🏆 Subasta finalizada. Ganador enviado al overlay.', winner);
 }
 
-// === Simulación manual ===
+// ================================
+// SIMULACIÓN DE DONACIONES
+// ================================
 async function simulateDonation(username, coins) {
   console.log(`💰 Simulación: ${username} → ${coins}`);
   const avatar = await getTikTokAvatar(username);
   registerDonation(username, coins, avatar || null);
 }
 
-// === Socket.IO ===
+// ================================
+// SOCKET.IO
+// ================================
 io.on('connection', (socket) => {
   console.log('Cliente conectado ✅');
   socket.emit('state', state);
   socket.emit('updateInfo', overlayInfo);
   socket.emit('history', history);
 
+  // Eventos desde el admin
   socket.on('admin:start', ({ duration, delay }) => startAuction(duration, delay));
   socket.on('admin:stop', () => {
-    clearInterval(interval);
+    clearInterval(interval); 
     clearInterval(delayInterval);
     state.running = false;
     endAuction();
@@ -182,10 +205,7 @@ io.on('connection', (socket) => {
     console.log('🔄 Subasta reiniciada manualmente.');
   });
   socket.on('admin:simulate', async ({ username, coins }) => simulateDonation(username, coins));
-  socket.on('admin:theme', (theme) => {
-    state.theme = theme;
-    io.emit('themeChange', theme);
-  });
+  socket.on('admin:theme', (theme) => { state.theme = theme; io.emit('themeChange', theme); });
   socket.on('admin:updateInfo', (data) => {
     overlayInfo = data;
     io.emit('updateInfo', overlayInfo);
@@ -193,8 +213,11 @@ io.on('connection', (socket) => {
   });
 });
 
-// === TikTok Live ===
+// ================================
+// TIKTOK LIVE CONNECTOR
+// ================================
 let tiktokConn = null;
+
 async function connectTikTok() {
   try {
     if (tiktokConn) {
@@ -208,38 +231,48 @@ async function connectTikTok() {
     await tiktokConn.connect();
     console.log(`✅ Conectado a TikTok Live para @${TIKTOK_USERNAME}`);
 
-    // Evento de regalo
     tiktokConn.on('gift', async (data) => {
       try {
-        if (data.giftType === 1 && !data.repeatEnd) return; // Evita doble conteo
+        const username = data.uniqueId || data.user_id || 'unknown';
+        const coins = data.diamondCount || 0;
 
-        const username = data.uniqueId || 'unknown';
-        const coins = data.diamondCount || data.repeatCount || 0;
-
-        let avatar = data.profilePictureUrl && data.profilePictureUrl.trim() !== '' ? data.profilePictureUrl : null;
-        registerDonation(username, coins, avatar);
+        if (!coins) return;
 
         console.log(`💎 Donación procesada: ${username} → ${coins}`);
+
+        let avatar = data.profilePictureUrl && data.profilePictureUrl.trim() !== ''
+          ? data.profilePictureUrl
+          : null;
+
+        if (!avatar) {
+          console.log(`⚠️ Usuario ${username} sin avatar, se mostrará emoji 🔥`);
+        }
+
+        registerDonation(username, coins, avatar);
       } catch (err) {
         console.error('Error manejando gift:', err);
       }
     });
 
     tiktokConn.on('error', (err) => {
-      console.error('TikTok conn error:', err.message || err);
+      console.error('TikTok conn error:', err?.message || err);
     });
 
     tiktokConn.on('close', (reason) => {
       console.log('TikTok connection closed:', reason);
       setTimeout(connectTikTok, TIKTOK_RETRY_MS);
     });
+
   } catch (err) {
-    console.error('Error conectando a TikTok:', err.message || err);
+    console.error('Error conectando a TikTok:', err?.message || err);
     setTimeout(connectTikTok, TIKTOK_RETRY_MS);
   }
 }
 
+// Iniciar conexión con TikTok
 connectTikTok().catch(e => console.error('connectTikTok failed:', e));
 
-// Iniciar servidor
+// ================================
+// INICIAR SERVIDOR
+// ================================
 server.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
