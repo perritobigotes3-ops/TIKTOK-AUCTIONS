@@ -1,6 +1,7 @@
 // server.js
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const socketIo = require('socket.io');
 const axios = require('axios');
@@ -10,15 +11,16 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
+// ===== CONFIG =====
 const PORT = process.env.PORT || 3000;
-
-// --- CONFIG ---
-const TIKTOK_USERNAME = "mykestradesbrainrots"; // Usuario sin @
+const TIKTOK_USERNAME = "mykestradesbrainrots"; // <-- usuario sin @
 const TIKTOK_RETRY_MS = 30_000;
+const SAVE_FILE = path.join(__dirname, 'state.json');
+const LOG_FILE = path.join(__dirname, 'donations.log');
 
-// --- Estado global ---
+// ===== ESTADO GLOBAL =====
 let state = {
-  participants: {},
+  participants: {},  // { username: coins }
   recentDonations: [],
   timer: { remaining: 60, delay: 10, inDelay: false, delayRemaining: null },
   theme: 'gamer',
@@ -26,32 +28,47 @@ let state = {
 };
 
 let overlayInfo = { delayText: 'Delay 10 Segundos', minimoText: 'Sin mínimo' };
-let history = [];
+let history = []; // historial de subastas
 
 let interval = null;
 let delayInterval = null;
+let processedGifts = new Set(); // para evitar duplicados
 
-// --- Anti duplicado ---
-const recentGifts = new Map();
-const GIFT_COOLDOWN_MS = 800; // 0.8s
+// ===== FUNCIONES DE PERSISTENCIA =====
+function saveState() {
+  const data = { state, history };
+  fs.writeFileSync(SAVE_FILE, JSON.stringify(data, null, 2));
+}
 
-// --- Servir carpeta public ---
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (req, res) => res.send('Servidor Subasta Overlay activo 🚀'));
+function loadState() {
+  if (fs.existsSync(SAVE_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(SAVE_FILE));
+      state = data.state || state;
+      history = data.history || [];
+      console.log('📂 Estado cargado desde archivo');
+    } catch (err) {
+      console.error('⚠️ Error cargando estado guardado:', err);
+    }
+  }
+}
+loadState();
 
-// ---- Helpers ----
+// ===== HELPERS =====
 async function getTikTokAvatar(username) {
   try {
     const url = `https://www.tiktok.com/@${username}`;
-    const { data } = await axios.get(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      timeout: 8000
-    });
+    const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
     const match = data.match(/"avatarLarger":"(.*?)"/);
     return match ? match[1].replace(/\\u0026/g, '&') : null;
-  } catch (err) {
+  } catch {
     return null;
   }
+}
+
+function logDonation(username, coins) {
+  const logEntry = `${new Date().toISOString()} - ${username}: ${coins}\n`;
+  fs.appendFileSync(LOG_FILE, logEntry);
 }
 
 function emitState() {
@@ -70,10 +87,12 @@ function registerDonation(username, coins, avatar) {
   state.recentDonations.unshift({ username, coins, avatar: avatar || null });
   if (state.recentDonations.length > 20) state.recentDonations.pop();
 
+  logDonation(username, coins);
   emitState();
+  saveState();
 }
 
-// ---- Subasta ----
+// ===== SUBASTA =====
 function startAuction(duration = 60, delay = 10) {
   clearInterval(interval);
   clearInterval(delayInterval);
@@ -87,6 +106,7 @@ function startAuction(duration = 60, delay = 10) {
   state.running = true;
 
   emitState();
+  saveState();
 
   interval = setInterval(() => {
     state.timer.remaining--;
@@ -138,23 +158,26 @@ function endAuction() {
 
   io.emit('auctionEnd', { state, winner });
   emitState();
+  saveState();
+
   console.log('🏆 Subasta finalizada. Ganador enviado al overlay.', winner);
 }
 
-// ---- Simulación ----
-async function simulateDonation(username, coins) {
-  console.log(`💰 Simulación: ${username} → ${coins}`);
+// ===== SIMULACIÓN AVANZADA =====
+async function simulateDonation(username, coins, isCombo = false) {
+  console.log(`💰 Simulación: ${username} → ${coins} ${isCombo ? '(combo)' : ''}`);
   const avatar = await getTikTokAvatar(username);
   registerDonation(username, coins, avatar || null);
 }
 
-// ---- Socket.IO ----
+// ===== SOCKET.IO =====
 io.on('connection', (socket) => {
   console.log('Cliente conectado ✅');
   socket.emit('state', state);
   socket.emit('updateInfo', overlayInfo);
   socket.emit('history', history);
 
+  // Admin
   socket.on('admin:start', ({ duration, delay }) => startAuction(duration, delay));
   socket.on('admin:stop', () => {
     clearInterval(interval); clearInterval(delayInterval);
@@ -171,18 +194,20 @@ io.on('connection', (socket) => {
       running: false
     };
     io.emit('state', state);
+    saveState();
     console.log('🔄 Subasta reiniciada manualmente.');
   });
-  socket.on('admin:simulate', async ({ username, coins }) => simulateDonation(username, coins));
+  socket.on('admin:simulate', async ({ username, coins, isCombo }) => simulateDonation(username, coins, isCombo));
   socket.on('admin:theme', (theme) => { state.theme = theme; io.emit('themeChange', theme); });
   socket.on('admin:updateInfo', (data) => {
     overlayInfo = data;
     io.emit('updateInfo', overlayInfo);
+    saveState();
     console.log('ℹ️ updateInfo', data);
   });
 });
 
-// ---- TikTok Live Connector ----
+// ===== TIKTOK LIVE CONNECTOR =====
 let tiktokConn = null;
 async function connectTikTok() {
   try {
@@ -190,6 +215,7 @@ async function connectTikTok() {
       try { tiktokConn.disconnect(); } catch (e) {}
       tiktokConn = null;
     }
+
     console.log(`🔌 Intentando conectar a TikTok Live @${TIKTOK_USERNAME} ...`);
     tiktokConn = new WebcastPushConnection(TIKTOK_USERNAME);
 
@@ -198,32 +224,30 @@ async function connectTikTok() {
 
     tiktokConn.on('gift', async (data) => {
       try {
-        // 🔹 Ignorar evento finalizador de combo
-        if (data.repeatEnd) {
-          console.log(`⏩ Evento repeatEnd ignorado para ${data.uniqueId}`);
+        const username = data.uniqueId || 'unknown';
+        const giftId = `${username}-${data.giftId}-${data.timestamp}`;
+
+        if (processedGifts.has(giftId)) {
+          console.log(`⚠️ Donación duplicada ignorada: ${giftId}`);
           return;
         }
+        processedGifts.add(giftId);
 
-        const username = data.uniqueId || data.user_id || 'unknown';
         const coins = data.diamondCount || 0;
-
-        // 🔹 Anti-duplicado usando timestamp exacto
-        const giftKey = `${username}-${data.giftId}-${coins}-${data.timestamp}`;
-        const now = Date.now();
-
-        if (recentGifts.has(giftKey) && now - recentGifts.get(giftKey) < GIFT_COOLDOWN_MS) {
-          console.log(`⚠️ Donación duplicada ignorada: ${giftKey}`);
+        if (coins <= 0) {
+          console.log(`⚠️ Donación sin monedas ignorada: ${username}`);
           return;
         }
-        recentGifts.set(giftKey, now);
-
-        console.log(`💎 Donación procesada: ${username} → ${coins}`);
 
         let avatar = data.profilePictureUrl && data.profilePictureUrl.trim() !== ''
           ? data.profilePictureUrl
           : null;
 
+        console.log(`💎 Donación procesada: ${username} → ${coins}`);
         registerDonation(username, coins, avatar);
+
+        // Limpiar duplicados cada 5 min
+        setTimeout(() => processedGifts.delete(giftId), 300000);
       } catch (err) {
         console.error('Error manejando gift:', err);
       }
@@ -246,5 +270,5 @@ async function connectTikTok() {
 
 connectTikTok().catch(e => console.error('connectTikTok failed:', e));
 
-// ---- Iniciar servidor ----
+// ===== START SERVER =====
 server.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
