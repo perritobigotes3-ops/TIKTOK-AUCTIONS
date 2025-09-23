@@ -1,67 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Panel Admin - Subasta Pro</title>
-  <link rel="stylesheet" href="/css/admin-basic.css">
-  <style>
-    body{background:#000;color:#fff;font-family:Arial;padding:18px}
-    .card{max-width:420px;margin:0 auto;background:#111;padding:16px;border-radius:10px;box-shadow:0 0 18px rgba(0,225,255,0.12)}
-    label{display:block;margin-top:10px;color:#ccc}
-    input,select,button{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;font-size:15px}
-    button{cursor:pointer}
-    .row{display:flex;gap:8px}
-    .row>input{flex:1}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración</title>
+  <link rel="stylesheet" href="/css/style-base.css">
 </head>
 <body>
-  <div class="card">
-    <h2 style="color:#00e1ff;margin:0 0 8px 0">Panel de Administración</h2>
+  <div id="admin-panel">
+    <h1>Panel de Subastas</h1>
 
-    <label>⏳ Duración (segundos)</label>
-    <input id="duration" type="number" value="60">
+    <div class="controls">
+      <label>Duración (segundos):</label>
+      <input type="number" id="auctionDuration" value="60" min="10" step="5">
 
-    <label>⏱ Delay (segundos)</label>
-    <input id="delay" type="number" value="10">
+      <label>Delay final (segundos):</label>
+      <input type="number" id="auctionDelay" value="10" min="5" step="5">
 
-    <label>🎨 Tema</label>
-    <select id="theme">
-      <option value="gamer">Gamer</option>
-      <option value="femenino">Femenino</option>
-    </select>
-
-    <label>⚡ Texto Delay</label>
-    <input id="infoDelay" type="text" value="10 SEGUNDOS SNIPE !!">
-
-    <label>💰 Texto Mínimo</label>
-    <input id="infoMinimo" type="text" value="MÍNIMO 0 PUNTOS">
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-      <button id="startBtn" style="background:#00e1ff;color:#000">🚀 Iniciar</button>
-      <button id="stopBtn" style="background:#ff4444">🛑 Detener</button>
+      <button id="startAuction">Iniciar Subasta</button>
+      <button id="stopAuction">Detener Subasta</button>
+      <button id="resetAuction">Reiniciar</button>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <button id="resetBtn" style="background:#ff6600">🔄 Reiniciar</button>
-      <button id="simulateBtn" style="background:#ffd700;color:#000">💸 Simular</button>
+    <div class="simulate">
+      <h2>Simular donación</h2>
+      <input type="text" id="simulateUsername" placeholder="Usuario">
+      <input type="number" id="simulateCoins" placeholder="Monedas" min="1">
+      <button id="simulateDonation">Simular</button>
     </div>
 
-    <label style="margin-top:12px">🎭 Nombre simular</label>
-    <input id="simName" type="text" placeholder="Ej: Josh">
-
-    <label>💎 Monedas simular</label>
-    <input id="simCoins" type="number" value="10">
-
-    <hr style="margin:12px 0;border-color:#222">
-
-    <h4 style="margin:6px 0;color:#fff">📜 Historial (últimas subastas)</h4>
-    <div id="history" style="max-height:160px;overflow:auto;background:#000;border-radius:8px;padding:8px;border:1px solid #222"></div>
+    <div id="history">
+      <h2>Historial</h2>
+      <ul id="historyList"></ul>
+    </div>
   </div>
 
-  <script>
-    window.SOCKET_IO_ORIGIN = window.location.origin;
-  </script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/admin.js"></script>
 </body>
