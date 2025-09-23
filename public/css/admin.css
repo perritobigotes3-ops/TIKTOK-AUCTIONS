@@ -1,56 +1,109 @@
+/* Estilos generales */
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f0f2f5;
   margin: 0;
   padding: 0;
   color: #333;
 }
 
 .container {
-  max-width: 800px;
-  margin: 20px auto;
+  max-width: 900px;
+  margin: 30px auto;
   background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
+header {
   text-align: center;
-  color: #444;
-}
-
-section {
   margin-bottom: 20px;
 }
 
-label {
-  display: block;
-  margin: 8px 0 4px;
+header h1 {
+  color: #444;
+  font-size: 1.8em;
 }
 
-input {
-  padding: 6px;
-  margin-right: 8px;
+section {
+  margin-bottom: 25px;
 }
 
-button {
-  padding: 6px 12px;
-  background: #007bff;
+h2 {
+  font-size: 1.3em;
+  color: #222;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-inline {
+  display: flex;
+  gap: 10px;
+}
+
+input[type="text"],
+input[type="number"] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Botones */
+.btn {
+  padding: 8px 15px;
   border: none;
-  color: #fff;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 4px;
+  font-size: 14px;
+  transition: 0.3s;
 }
 
-button:hover {
+.btn.primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn.primary:hover {
   background: #0056b3;
 }
 
-#history {
-  background: #fafafa;
+.btn.danger {
+  background: #ff4d4d;
+  color: white;
+}
+
+.btn.danger:hover {
+  background: #cc0000;
+}
+
+.simulate-btn {
+  background: #28a745;
+  color: white;
+}
+
+.simulate-btn:hover {
+  background: #1e7e34;
+}
+
+/* Historial */
+.history-box {
+  background: #f9f9f9;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 10px;
-  min-height: 50px;
+  min-height: 80px;
+  max-height: 300px;
+  overflow-y: auto;
 }
